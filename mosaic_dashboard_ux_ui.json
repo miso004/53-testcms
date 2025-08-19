@@ -1,0 +1,178 @@
+{
+  "product": "Mosaic Dashboard (Meraki UI / Tailwind CSS)",
+  "principles": [
+    {
+      "id": "sidebar-navigation-01",
+      "principle": "Vertical sidebar for primary navigation with clear labels and icon emphasis",
+      "why": "Allows users to quickly access main sections at any time, even on deep pages",
+      "content_examples": [
+        "Dashboard",
+        "Customers",
+        "Orders",
+        "Campaigns",
+        "Tasks",
+        "Settings"
+      ],
+      "design_elements": {
+        "components": [
+          "Vertical sidebar",
+          "Icon + Text navigation items"
+        ],
+        "layout": "Fixed on left, spanning full height",
+        "typography": {
+          "weight": "Medium/Bold",
+          "size": "Medium"
+        },
+        "color": {
+          "background": "Dark/navy",
+          "text": "Light/white"
+        },
+        "interaction": "Hover highlight or active state"
+      },
+      "applies_to": [
+        "Navigation (Global)"
+      ]
+    },
+    {
+      "id": "kpi-cards-01",
+      "principle": "Inline KPI summary cards with prominent values and trend indicators",
+      "why": "Delivers critical metrics at a glance, aiding quick performance assessment",
+      "content_examples": [
+        "Acme Plus: $24,780 ↑",
+        "Acme Advanced: $17,489 ↓",
+        "Avg Order Value: $72"
+      ],
+      "design_elements": {
+        "components": [
+          "Card containers",
+          "KPI number",
+          "Small chart or trend badge"
+        ],
+        "typography": {
+          "number": "Large/Bold",
+          "label": "Slightly smaller/Regular"
+        },
+        "color": {
+          "positive": "Green badge",
+          "negative": "Red badge"
+        },
+        "layout": "Horizontal row, equal-width cards"
+      },
+      "applies_to": [
+        "Dashboard Overview"
+      ]
+    },
+    {
+      "id": "chart-grid-01",
+      "principle": "Grid layout combining bar charts and line charts for data comparison",
+      "why": "Supports visual comparison between data sets (e.g., direct vs indirect revenue)",
+      "content_examples": [
+        "Direct vs Indirect bar chart",
+        "Sales line graph",
+        "Top Channels pie or list"
+      ],
+      "design_elements": {
+        "components": [
+          "Bar chart",
+          "Line chart",
+          "Pie chart or table"
+        ],
+        "layout": "Multi-column grid beneath KPI cards",
+        "spacing": "Consistent margins between widgets",
+        "color": {
+          "bars": "Blue-violet gradients",
+          "lines": "Muted grey"
+        }
+      },
+      "applies_to": [
+        "Dashboard Analytics"
+      ]
+    },
+    {
+      "id": "greeting-user-01",
+      "principle": "Friendly greeting banner with user name and light background accent",
+      "why": "Humanizes the interface and reinforces user recognition",
+      "content_examples": [
+        "Good afternoon, Acme Inc. 😊"
+      ],
+      "design_elements": {
+        "components": [
+          "Banner box",
+          "Emoji or icon",
+          "User/company name"
+        ],
+        "typography": {
+          "headline": "Medium/Bold",
+          "size": "Medium"
+        },
+        "color": {
+          "background": "Soft pastel (light blue/purple)"
+        },
+        "layout": "Full width, top of main content area"
+      },
+      "applies_to": [
+        "Dashboard Header"
+      ]
+    },
+    {
+      "id": "responsive-spacing-01",
+      "principle": "Generous padding and spacing for clarity and readability",
+      "why": "Prevents visual clutter in data-dense environments",
+      "design_elements": {
+        "spacing": {
+          "card_margin": "16px+",
+          "padding_in_cards": "12–20px"
+        },
+        "layout": "Clear separation between sections"
+      },
+      "applies_to": [
+        "All dashboard elements"
+      ]
+    },
+    {
+      "id": "typography-hierarchy-01",
+      "principle": "Clear typographic hierarchy distinguishing labels, values, and details",
+      "why": "Enhances scannability and information prioritization",
+      "design_elements": {
+        "typography": {
+          "labels": "Regular/Normal",
+          "values": "Large/Bold",
+          "details": "Small/Light"
+        }
+      },
+      "applies_to": [
+        "Cards and chart labels"
+      ]
+    },
+    {
+      "id": "theming-darklight-01",
+      "principle": "Support for light and dark themes with high contrast readability",
+      "why": "Ensures usability across user preferences and lighting conditions",
+      "design_elements": {
+        "color": {
+          "light_background": "White/light grey",
+          "dark_background": "Dark/charcoal",
+          "text": "Light text on dark, dark text on light"
+        },
+        "components": [
+          "Toggle for theme switch"
+        ]
+      },
+      "applies_to": [
+        "Dashboard UI"
+      ]
+    },
+    {
+      "id": "rtl-support-01",
+      "principle": "Built-in RTL language support for global usability",
+      "why": "Enables usability in right-to-left languages seamlessly",
+      "design_elements": {
+        "layout": "Mirrored sidebar and text alignment when RTL",
+        "direction": "Flex/grid adaptation"
+      },
+      "applies_to": [
+        "Global Layout"
+      ]
+    }
+  ]
+}

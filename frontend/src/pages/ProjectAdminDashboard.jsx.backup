@@ -1,0 +1,1558 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faDashboard, 
+  faNewspaper, 
+  faComments, 
+  faQuestionCircle, 
+  faUsers, 
+  faCog, 
+  faPlus,
+  faEdit,
+  faTrash,
+  faEye,
+  faSearch,
+  faBars,
+  faTimes,
+  faChartLine,
+  faFileAlt,
+  faUserCog,
+  faSignOutAlt,
+  faHome,
+  faFolder
+} from '@fortawesome/free-solid-svg-icons';
+import FileUpload from '../components/FileUpload';
+
+const ProjectAdminDashboard = () => {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [projectInfo, setProjectInfo] = useState(null);
+  const [stats, setStats] = useState({
+    totalPosts: 0,
+    totalUsers: 0,
+    totalCategories: 0,
+    recentPosts: []
+  });
+
+  // 게시글 데이터 상태
+  const [posts, setPosts] = useState({
+    notice: [],
+    free: [],
+    qna: []
+  });
+
+  // 사용자 데이터 상태
+  const [users, setUsers] = useState([]);
+
+  // 카테고리 데이터 상태
+  const [categories, setCategories] = useState([]);
+
+  // 게시글 편집/삭제 상태
+  const [editingPost, setEditingPost] = useState(null);
+  const [showPostEditor, setShowPostEditor] = useState(false);
+  const [selectedPosts, setSelectedPosts] = useState([]);
+
+  // 게시글 편집 모달
+  const [postEditorModal, setPostEditorModal] = useState({
+    isOpen: false,
+    post: null,
+    boardType: null
+  });
+
+  // 사용자 관리 상태
+  const [userModal, setUserModal] = useState({
+    isOpen: false,
+    user: null,
+    mode: 'add' // 'add' or 'edit'
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  // 설정 관련 상태
+  const [projectSettings, setProjectSettings] = useState({
+    name: '',
+    description: ''
+  });
+  const [categoryModal, setCategoryModal] = useState({
+    isOpen: false,
+    category: null,
+    mode: 'add'
+  });
+
+  // 탭 변경 핸들러
+  const handleTabChange = (tab) => {
+    if (tab === 'board-management') {
+      setActiveTab('board-notice');
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
+  useEffect(() => {
+    // URL 파라미터에서 tab 값 읽기
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['dashboard', 'user-management', 'settings', 'file-management', 'board-notice', 'board-free', 'board-qna'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+
+    // 슈퍼 관리자 상태 확인
+    const superAdmin = localStorage.getItem('superAdmin');
+    if (superAdmin) {
+      try {
+        const adminData = JSON.parse(superAdmin);
+        setCurrentUser({
+          ...adminData,
+          role: 'super_admin',
+          isSuperAdmin: true
+        });
+        loadProjectData();
+        return;
+      } catch (error) {
+        console.error('슈퍼 관리자 정보 파싱 오류:', error);
+      }
+    }
+
+    // 프로젝트 관리자 로그인 상태 확인
+    const savedUser = localStorage.getItem(`project_${projectId}_user`);
+    if (!savedUser) {
+      navigate(`/project/${projectId}`);
+      return;
+    }
+
+    try {
+      const user = JSON.parse(savedUser);
+      if (user.role !== 'project_admin') {
+        navigate(`/project/${projectId}`);
+        return;
+      }
+      setCurrentUser(user);
+    } catch (error) {
+      navigate(`/project/${projectId}`);
+      return;
+    }
+
+    loadProjectData();
+  }, [projectId, navigate, location.search]);
+
+  const loadProjectData = () => {
+    try {
+      // 프로젝트 정보 로드
+      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setProjectInfo(project);
+        // 프로젝트 설정 초기화
+        setProjectSettings({
+          name: project.name || '',
+          description: project.description || ''
+        });
+      }
+
+      // 게시글 데이터 로드
+      const savedPosts = localStorage.getItem(`project_${projectId}_posts`);
+      if (savedPosts) {
+        try {
+          const parsedPosts = JSON.parse(savedPosts);
+          setPosts(parsedPosts);
+        } catch (error) {
+          console.error('게시글 데이터 파싱 오류:', error);
+          loadSamplePosts();
+        }
+      } else {
+        loadSamplePosts();
+      }
+
+      // 사용자 데이터 로드
+      const savedUsers = localStorage.getItem(`project_${projectId}_users`);
+      if (savedUsers) {
+        try {
+          const parsedUsers = JSON.parse(savedUsers);
+          setUsers(parsedUsers);
+        } catch (error) {
+          console.error('사용자 데이터 파싱 오류:', error);
+          setUsers([]);
+        }
+      } else {
+        // 샘플 사용자 데이터 생성
+        const sampleUsers = [
+          {
+            id: 1,
+            username: 'test_user',
+            password: 'test123',
+            email: 'test@example.com',
+            role: 'user',
+            projectId: projectId,
+            createdAt: new Date().toISOString()
+          }
+        ];
+        setUsers(sampleUsers);
+        localStorage.setItem(`project_${projectId}_users`, JSON.stringify(sampleUsers));
+      }
+
+      // 카테고리 데이터 로드
+      const savedCategories = localStorage.getItem(`project_${projectId}_categories`);
+      if (savedCategories) {
+        try {
+          const parsedCategories = JSON.parse(savedCategories);
+          setCategories(parsedCategories);
+        } catch (error) {
+          console.error('카테고리 데이터 파싱 오류:', error);
+          loadSampleCategories();
+        }
+      } else {
+        loadSampleCategories();
+      }
+
+      // 통계 업데이트
+      updateStats();
+    } catch (error) {
+      console.error('프로젝트 데이터 로딩 오류:', error);
+    }
+  };
+
+  const loadSamplePosts = () => {
+    const samplePosts = {
+      notice: [
+        { 
+          id: 1, 
+          title: '공지사항 게시판이 오픈되었습니다!', 
+          author: '관리자', 
+          date: '2024-01-15', 
+          views: 156, 
+          content: '환영합니다!',
+          boardType: 'notice',
+          category: '공지'
+        },
+        { 
+          id: 2, 
+          title: '사이트 이용 안내', 
+          author: '관리자', 
+          date: '2024-01-14', 
+          views: 89, 
+          content: '이용 방법을 확인하세요.',
+          boardType: 'notice',
+          category: '안내'
+        },
+        { 
+          id: 3, 
+          title: '개인정보 처리방침', 
+          author: '관리자', 
+          date: '2024-01-13', 
+          views: 67, 
+          content: '개인정보 보호 정책입니다.',
+          boardType: 'notice',
+          category: '정책'
+        }
+      ],
+      free: [
+        { 
+          id: 4, 
+          title: '안녕하세요! 처음 방문했습니다', 
+          author: '방문자1', 
+          date: '2024-01-15', 
+          views: 23, 
+          content: '반갑습니다!',
+          boardType: 'free',
+          category: '일반'
+        },
+        { 
+          id: 5, 
+          title: '오늘 날씨가 정말 좋네요', 
+          author: '방문자2', 
+          date: '2024-01-14', 
+          views: 18, 
+          content: '맑은 하늘이네요.',
+          boardType: 'free',
+          category: '일반'
+        },
+        { 
+          id: 6, 
+          title: '맛집 추천 부탁드려요', 
+          author: '방문자3', 
+          date: '2024-01-13', 
+          views: 45, 
+          content: '좋은 맛집 알려주세요.',
+          boardType: 'free',
+          category: '정보공유'
+        }
+      ],
+      qna: [
+        { 
+          id: 7, 
+          title: '회원가입은 어떻게 하나요?', 
+          author: '질문자1', 
+          date: '2024-01-15', 
+          views: 34, 
+          content: '회원가입 방법을 알려주세요.',
+          boardType: 'qna',
+          category: '질문'
+        },
+        { 
+          id: 8, 
+          title: '게시글 작성 방법', 
+          author: '질문자2', 
+          date: '2024-01-14', 
+          views: 28, 
+          content: '게시글을 어떻게 작성하나요?',
+          boardType: 'qna',
+          category: '질문'
+        },
+        { 
+          id: 9, 
+          title: '비밀번호 변경 문의', 
+          author: '질문자3', 
+          date: '2024-01-13', 
+          views: 19, 
+          content: '비밀번호를 변경하고 싶습니다.',
+          boardType: 'qna',
+          category: '질문'
+        }
+      ]
+    };
+    setPosts(samplePosts);
+    localStorage.setItem(`project_${projectId}_posts`, JSON.stringify(samplePosts));
+  };
+
+  const loadSampleCategories = () => {
+    const sampleCategories = [
+      { id: 1, name: '일반', boardType: 'free', color: 'blue' },
+      { id: 2, name: '정보공유', boardType: 'free', color: 'green' },
+      { id: 3, name: '질문', boardType: 'qna', color: 'purple' },
+      { id: 4, name: '답변', boardType: 'qna', color: 'orange' },
+      { id: 5, name: '공지', boardType: 'notice', color: 'red' },
+      { id: 6, name: '안내', boardType: 'notice', color: 'yellow' }
+    ];
+    setCategories(sampleCategories);
+    localStorage.setItem(`project_${projectId}_categories`, JSON.stringify(sampleCategories));
+  };
+
+  const updateStats = () => {
+    try {
+      const totalPosts = Object.values(posts).flat().length;
+      const totalUsers = users.length;
+      const totalCategories = categories.length;
+      const recentPosts = Object.values(posts).flat()
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 5);
+
+      setStats({
+        totalPosts,
+        totalUsers,
+        totalCategories,
+        recentPosts
+      });
+    } catch (error) {
+      console.error('통계 업데이트 오류:', error);
+    }
+  };
+
+  const handleLogout = () => {
+    // 슈퍼 관리자인 경우 슈퍼 관리자 로그아웃
+    if (currentUser?.isSuperAdmin) {
+      localStorage.removeItem('superAdmin');
+      navigate('/dashboard');
+      return;
+    }
+    
+    // 프로젝트 관리자인 경우 프로젝트별 로그아웃
+    localStorage.removeItem(`project_${projectId}_user`);
+    navigate(`/project/${projectId}`);
+  };
+
+  const handleGoToProject = () => {
+    navigate(`/project/${projectId}`);
+  };
+
+  // 게시글 편집/삭제 함수들
+  const handleEditPost = (post, boardType) => {
+    setPostEditorModal({
+      isOpen: true,
+      post,
+      boardType
+    });
+  };
+
+  const handleDeletePost = (postId, boardType) => {
+    if (window.confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+      try {
+        const updatedPosts = { ...posts };
+        updatedPosts[boardType] = updatedPosts[boardType].filter(p => p.id !== postId);
+        setPosts(updatedPosts);
+        localStorage.setItem(`project_${projectId}_posts`, JSON.stringify(updatedPosts));
+        updateStats();
+        alert('게시글이 삭제되었습니다.');
+      } catch (error) {
+        console.error('게시글 삭제 오류:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedPosts.length === 0) {
+      alert('삭제할 게시글을 선택해주세요.');
+      return;
+    }
+    
+    if (window.confirm(`선택된 ${selectedPosts.length}개의 게시글을 삭제하시겠습니까?`)) {
+      try {
+        const updatedPosts = { ...posts };
+        selectedPosts.forEach(({ postId, boardType }) => {
+          updatedPosts[boardType] = updatedPosts[boardType].filter(p => p.id !== postId);
+        });
+        setPosts(updatedPosts);
+        localStorage.setItem(`project_${projectId}_posts`, JSON.stringify(updatedPosts));
+        setSelectedPosts([]);
+        updateStats();
+        alert('선택된 게시글들이 삭제되었습니다.');
+      } catch (error) {
+        console.error('게시글 일괄 삭제 오류:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handlePostSelection = (postId, boardType, checked) => {
+    if (checked) {
+      setSelectedPosts([...selectedPosts, { postId, boardType }]);
+    } else {
+      setSelectedPosts(selectedPosts.filter(p => !(p.postId === postId && p.boardType === boardType)));
+    }
+  };
+
+  const handleSavePost = (updatedPost, boardType) => {
+    try {
+      const updatedPosts = { ...posts };
+      if (updatedPost.id) {
+        // 편집 모드
+        updatedPosts[boardType] = updatedPosts[boardType].map(p => 
+          p.id === updatedPost.id ? updatedPost : p
+        );
+        alert('게시글이 수정되었습니다.');
+      } else {
+        // 새 게시글 모드
+        updatedPost.id = Date.now();
+        updatedPost.date = new Date().toISOString().split('T')[0];
+        updatedPost.views = 0;
+        updatedPost.author = currentUser?.username || '관리자';
+        updatedPosts[boardType].unshift(updatedPost);
+        alert('새 게시글이 작성되었습니다.');
+      }
+      
+      setPosts(updatedPosts);
+      localStorage.setItem(`project_${projectId}_posts`, JSON.stringify(updatedPosts));
+      setPostEditorModal({ isOpen: false, post: null, boardType: null });
+      updateStats();
+    } catch (error) {
+      console.error('게시글 저장 오류:', error);
+      alert('게시글 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 사용자 관리 함수들
+  const handleAddUser = () => {
+    setUserModal({
+      isOpen: true,
+      user: null,
+      mode: 'add'
+    });
+  };
+
+  const handleEditUser = (user) => {
+    setUserModal({
+      isOpen: true,
+      user: user,
+      mode: 'edit'
+    });
+  };
+
+  const handleDeleteUser = (userId) => {
+    if (window.confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
+      try {
+        const updatedUsers = users.filter(u => u.id !== userId);
+        setUsers(updatedUsers);
+        localStorage.setItem(`project_${projectId}_users`, JSON.stringify(updatedUsers));
+        updateStats();
+        alert('사용자가 삭제되었습니다.');
+      } catch (error) {
+        console.error('사용자 삭제 오류:', error);
+        alert('사용자 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleBulkDeleteUsers = () => {
+    if (selectedUsers.length === 0) {
+      alert('삭제할 사용자를 선택해주세요.');
+      return;
+    }
+    
+    if (window.confirm(`선택된 ${selectedUsers.length}명의 사용자를 삭제하시겠습니까?`)) {
+      try {
+        const updatedUsers = users.filter(u => !selectedUsers.includes(u.id));
+        setUsers(updatedUsers);
+        localStorage.setItem(`project_${projectId}_users`, JSON.stringify(updatedUsers));
+        setSelectedUsers([]);
+        updateStats();
+        alert('선택된 사용자들이 삭제되었습니다.');
+      } catch (error) {
+        console.error('사용자 일괄 삭제 오류:', error);
+        alert('사용자 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleUserSelection = (userId, checked) => {
+    if (checked) {
+      setSelectedUsers([...selectedUsers, userId]);
+    } else {
+      setSelectedUsers(selectedUsers.filter(id => id !== userId));
+    }
+  };
+
+  const handleSaveUser = (userData) => {
+    try {
+      let updatedUsers;
+      
+      if (userModal.mode === 'add') {
+        // 새 사용자 추가 - 비밀번호 필수
+        if (!userData.password) {
+          alert('새 사용자 추가 시에는 비밀번호를 입력해야 합니다.');
+          return;
+        }
+        
+        const newUser = {
+          ...userData,
+          id: Date.now(),
+          projectId: projectId,
+          createdAt: new Date().toISOString()
+        };
+        updatedUsers = [...users, newUser];
+        alert('새 사용자가 추가되었습니다.');
+      } else {
+        // 기존 사용자 수정
+        updatedUsers = users.map(u => u.id === userData.id ? { ...u, ...userData } : u);
+        alert('사용자 정보가 수정되었습니다.');
+      }
+      
+      setUsers(updatedUsers);
+      localStorage.setItem(`project_${projectId}_users`, JSON.stringify(updatedUsers));
+      setUserModal({ isOpen: false, user: null, mode: 'add' });
+      updateStats();
+    } catch (error) {
+      console.error('사용자 저장 오류:', error);
+      alert('사용자 정보 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 검색된 사용자 필터링
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const renderDashboardTab = () => (
+    <div className="space-y-8">
+      {/* 환영 메시지 */}
+      <div className="text-center py-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl">
+        <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          {projectInfo?.name} 관리자 대시보드 🎯
+        </h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          프로젝트를 체계적으로 관리하고 모니터링하세요
+        </p>
+      </div>
+
+      {/* 통계 카드들 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faFileAlt} className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-800">{stats.totalPosts}</div>
+              <div className="text-blue-600 text-sm">전체 게시글</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faUsers} className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-800">{stats.totalUsers}</div>
+              <div className="text-green-600 text-sm">전체 사용자</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-800">{stats.totalCategories}</div>
+              <div className="text-purple-600 text-sm">카테고리</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 최근 게시글 */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">📝 최근 게시글</h2>
+        <div className="space-y-4">
+          {stats.recentPosts.map((post, index) => (
+            <div key={post.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+              <div className="flex items-center space-x-3">
+                <span className="px-3 py-1 bg-blue-100 text-blue-600 text-sm font-medium rounded-full">
+                  {post.author === '관리자' ? '공지' : '일반'}
+                </span>
+                <span className="font-medium text-gray-800">{post.title}</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                {post.date} | 조회 {post.views}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderBoardManagementTab = () => {
+    // 현재 활성화된 게시판 타입 결정
+    let currentBoardType = 'notice';
+    if (activeTab.startsWith('board-')) {
+      currentBoardType = activeTab.replace('board-', '');
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-gray-800">📝 게시판 관리</h2>
+          <div className="flex space-x-3">
+            {selectedPosts.length > 0 && (
+              <button 
+                onClick={handleBulkDelete}
+                className="bg-red-600 text-white px-4 py-3 rounded-xl hover:bg-red-700 transition-colors"
+              >
+                <FontAwesomeIcon icon={faTrash} className="mr-1" />
+                선택 삭제 ({selectedPosts.length})
+              </button>
+            )}
+            <button 
+              onClick={() => setPostEditorModal({ isOpen: true, post: null, boardType: currentBoardType })}
+              className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-2" />
+              새 게시글 작성
+            </button>
+          </div>
+        </div>
+
+        {/* 게시판 탭 */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6">
+              {[
+                { key: 'notice', label: '공지사항', icon: faNewspaper },
+                { key: 'free', label: '자유게시판', icon: faComments },
+                { key: 'qna', label: '질문게시판', icon: faQuestionCircle }
+              ].map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(`board-${key}`)}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                    activeTab === `board-${key}`
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <FontAwesomeIcon icon={icon} className="mr-2" />
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="p-6">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  {currentBoardType === 'notice' && '공지사항'}
+                  {currentBoardType === 'free' && '자유게시판'}
+                  {currentBoardType === 'qna' && '질문게시판'}
+                </h3>
+                <div className="text-sm text-gray-500">
+                  총 {posts[currentBoardType]?.length || 0}개 게시글
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="grid grid-cols-12 bg-white p-4 rounded-lg font-semibold text-gray-700 text-sm">
+                  <div className="col-span-1">선택</div>
+                  <div className="col-span-1">번호</div>
+                  <div className="col-span-4">제목</div>
+                  <div className="col-span-2">작성자</div>
+                  <div className="col-span-2">작성일</div>
+                  <div className="col-span-2">관리</div>
+                </div>
+                
+                {posts[currentBoardType]?.map((post, index) => (
+                  <div key={post.id} className="grid grid-cols-12 bg-white p-4 border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="col-span-1">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300"
+                        checked={selectedPosts.some(p => p.postId === post.id && p.boardType === currentBoardType)}
+                        onChange={(e) => handlePostSelection(post.id, currentBoardType, e.target.checked)}
+                      />
+                    </div>
+                    <div className="col-span-1 text-gray-500">{posts[currentBoardType].length - index}</div>
+                    <div className="col-span-4 font-medium text-gray-800">{post.title}</div>
+                    <div className="col-span-2 text-gray-600">{post.author}</div>
+                    <div className="col-span-2 text-gray-500">{post.date}</div>
+                    <div className="col-span-2 flex space-x-2">
+                      <button 
+                        onClick={() => handleEditPost(post, currentBoardType)}
+                        className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                        편집
+                      </button>
+                      <button 
+                        onClick={() => handleDeletePost(post.id, currentBoardType)}
+                        className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="mr-1" />
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+  };
+
+  const renderUserManagementTab = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-gray-800">👥 사용자 관리</h2>
+        <div className="flex space-x-3">
+          {selectedUsers.length > 0 && (
+            <button 
+              onClick={handleBulkDeleteUsers}
+              className="bg-red-600 text-white px-4 py-3 rounded-xl hover:bg-red-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faTrash} className="mr-2" />
+              선택 삭제 ({selectedUsers.length})
+            </button>
+          )}
+          <button 
+            onClick={handleAddUser}
+            className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlus} className="mr-2" />
+            사용자 추가
+          </button>
+        </div>
+      </div>
+
+      {/* 검색바 */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex space-x-4">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="사용자를 검색하세요..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
+          <button className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors">
+            검색
+          </button>
+        </div>
+      </div>
+
+      {/* 사용자 목록 */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="grid grid-cols-12 bg-gray-50 p-4 font-semibold text-gray-700">
+          <div className="col-span-1">선택</div>
+          <div className="col-span-1">ID</div>
+          <div className="col-span-3">사용자명</div>
+          <div className="col-span-3">이메일</div>
+          <div className="col-span-2">역할</div>
+          <div className="col-span-2">관리</div>
+        </div>
+        
+        {filteredUsers.map((user, index) => (
+          <div key={user.id} className="grid grid-cols-12 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div className="col-span-1">
+              <input 
+                type="checkbox" 
+                className="rounded border-gray-300"
+                checked={selectedUsers.includes(user.id)}
+                onChange={(e) => handleUserSelection(user.id, e.target.checked)}
+              />
+            </div>
+            <div className="col-span-1 text-gray-500">{user.id}</div>
+            <div className="col-span-3 font-medium text-gray-800">{user.username}</div>
+            <div className="col-span-3 text-gray-600">{user.email}</div>
+            <div className="col-span-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                user.role === 'project_admin' 
+                  ? 'bg-purple-100 text-purple-600' 
+                  : 'bg-blue-100 text-blue-600'
+              }`}>
+                {user.role === 'project_admin' ? '관리자' : '일반사용자'}
+              </span>
+            </div>
+            <div className="col-span-2 flex space-x-2">
+              <button 
+                onClick={() => handleEditUser(user)}
+                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                편집
+              </button>
+              <button 
+                onClick={() => handleDeleteUser(user.id)}
+                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              >
+                <FontAwesomeIcon icon={faTrash} className="mr-1" />
+                삭제
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="space-y-6">
+      <h2 className="text-3xl font-bold text-gray-800">⚙️ 프로젝트 설정</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 기본 정보 */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">📋 기본 정보</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">프로젝트명</label>
+              <input
+                type="text"
+                value={projectSettings.name || ''}
+                onChange={(e) => handleProjectSettingsChange('name', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="프로젝트명을 입력하세요"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">설명</label>
+              <textarea
+                value={projectSettings.description || ''}
+                onChange={(e) => handleProjectSettingsChange('description', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="프로젝트에 대한 설명을 입력하세요"
+              />
+            </div>
+            <button 
+              onClick={handleSaveProjectSettings}
+              className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              저장
+            </button>
+          </div>
+        </div>
+
+        {/* 카테고리 관리 */}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">🏷️ 카테고리 관리</h3>
+          <div className="space-y-4">
+            {categories.map(category => (
+              <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-4 h-4 bg-${category.color}-500 rounded-full`}></div>
+                  <span className="font-medium text-gray-800">{category.name}</span>
+                  <span className="text-sm text-gray-500">({category.boardType})</span>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleEditCategory(category)}
+                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faEdit} className="mr-1" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteCategory(category.id)}
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    <FontAwesomeIcon icon={faTrash} className="mr-1" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button 
+              onClick={handleAddCategory}
+              className="w-full bg-green-600 text-white py-3 px-4 rounded-xl hover:bg-green-700 transition-colors"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-2" />
+              새 카테고리 추가
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFileManagementTab = () => {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-3xl font-bold text-gray-800">📁 파일 관리</h2>
+        <FileUpload 
+          projectId={projectId}
+          onFileUpload={(files) => {
+            console.log('업로드된 파일들:', files);
+            // 파일 업로드 후 처리 로직
+          }}
+          onFileDelete={(fileId) => {
+            console.log('삭제된 파일:', fileId);
+            // 파일 삭제 후 처리 로직
+          }}
+        />
+      </div>
+    );
+  };
+
+  // 게시글 편집 모달 컴포넌트
+  const renderPostEditorModal = () => {
+    if (!postEditorModal.isOpen) return null;
+
+    const { post, boardType } = postEditorModal;
+    const isEdit = !!post;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-gray-800">
+              {isEdit ? '게시글 편집' : '새 게시글 작성'}
+            </h3>
+            <button
+              onClick={() => setPostEditorModal({ isOpen: false, post: null, boardType: null })}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <FontAwesomeIcon icon={faTimes} className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const postData = {
+              title: formData.get('title'),
+              content: formData.get('content'),
+              author: currentUser.username,
+              boardType: boardType
+            };
+            
+            if (isEdit) {
+              postData.id = post.id;
+              postData.date = post.date;
+              postData.views = post.views;
+            }
+            
+            handleSavePost(postData, boardType);
+          }}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">제목</label>
+                <input
+                  type="text"
+                  name="title"
+                  defaultValue={post?.title || ''}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="게시글 제목을 입력하세요"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">내용</label>
+                <textarea
+                  name="content"
+                  defaultValue={post?.content || ''}
+                  required
+                  rows={8}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="게시글 내용을 입력하세요"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setPostEditorModal({ isOpen: false, post: null, boardType: null })}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  {isEdit ? '수정' : '작성'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // 사용자 편집 모달 컴포넌트
+  const renderUserEditorModal = () => {
+    if (!userModal.isOpen) return null;
+
+    const { user, mode } = userModal;
+    const isEdit = mode === 'edit';
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-gray-800">
+              {isEdit ? '사용자 편집' : '새 사용자 추가'}
+            </h3>
+            <button
+              onClick={() => setUserModal({ isOpen: false, user: null, mode: 'add' })}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <FontAwesomeIcon icon={faTimes} className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const userData = {
+              username: formData.get('username'),
+              email: formData.get('email'),
+              password: formData.get('password'), // 비밀번호 추가
+              role: formData.get('role') // 'project_admin' or 'user'
+            };
+            
+            if (isEdit) {
+              userData.id = user.id;
+              // 수정 시 비밀번호가 비어있으면 기존 비밀번호 유지
+              if (!userData.password) {
+                userData.password = user.password;
+              }
+            }
+            
+            handleSaveUser(userData);
+          }}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">사용자명</label>
+                <input
+                  type="text"
+                  name="username"
+                  defaultValue={user?.username || ''}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="사용자명을 입력하세요"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                <input
+                  type="email"
+                  name="email"
+                  defaultValue={user?.email || ''}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="이메일을 입력하세요"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {isEdit ? '새 비밀번호 (변경 시에만 입력)' : '비밀번호'}
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  required={!isEdit}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={isEdit ? '변경 시에만 입력하세요' : '비밀번호를 입력하세요'}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">역할</label>
+                <select
+                  name="role"
+                  defaultValue={user?.role || 'user'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="user">일반 사용자</option>
+                  <option value="project_admin">프로젝트 관리자</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setUserModal({ isOpen: false, user: null, mode: 'add' })}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  {isEdit ? '수정' : '추가'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // 카테고리 편집 모달 컴포넌트
+  const renderCategoryEditorModal = () => {
+    if (!categoryModal.isOpen) return null;
+
+    const { category, mode } = categoryModal;
+    const isEdit = mode === 'edit';
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-gray-800">
+              {isEdit ? '카테고리 편집' : '새 카테고리 추가'}
+            </h3>
+            <button
+              onClick={() => setCategoryModal({ isOpen: false, category: null, mode: 'add' })}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <FontAwesomeIcon icon={faTimes} className="h-6 w-6" />
+            </button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const categoryData = {
+              name: formData.get('name'),
+              boardType: formData.get('boardType'),
+              color: formData.get('color')
+            };
+            
+            if (isEdit) {
+              categoryData.id = category.id;
+            }
+            
+            handleSaveCategory(categoryData);
+          }}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">카테고리명</label>
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={category?.name || ''}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="카테고리명을 입력하세요"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">게시판 타입</label>
+                <select
+                  name="boardType"
+                  defaultValue={category?.boardType || 'free'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="notice">공지사항</option>
+                  <option value="free">자유게시판</option>
+                  <option value="qna">질문게시판</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">색상</label>
+                <select
+                  name="color"
+                  defaultValue={category?.color || 'blue'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="blue">파랑</option>
+                  <option value="green">초록</option>
+                  <option value="purple">보라</option>
+                  <option value="orange">주황</option>
+                  <option value="red">빨강</option>
+                  <option value="yellow">노랑</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setCategoryModal({ isOpen: false, category: null, mode: 'add' })}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  {isEdit ? '수정' : '추가'}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // 설정 관련 함수들
+  const handleProjectSettingsChange = (field, value) => {
+    setProjectSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveProjectSettings = () => {
+    try {
+      // 프로젝트 설정 저장 로직
+      if (projectInfo) {
+        const updatedProject = {
+          ...projectInfo,
+          name: projectSettings.name || projectInfo.name,
+          description: projectSettings.description || projectInfo.description
+        };
+        
+        // localStorage 업데이트
+        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+        const projectIndex = projects.findIndex(p => p.id === projectId);
+        if (projectIndex !== -1) {
+          projects[projectIndex] = updatedProject;
+          localStorage.setItem('projects', JSON.stringify(projects));
+          setProjectInfo(updatedProject);
+          alert('프로젝트 설정이 저장되었습니다.');
+        } else {
+          alert('프로젝트를 찾을 수 없습니다.');
+        }
+      }
+    } catch (error) {
+      console.error('프로젝트 설정 저장 오류:', error);
+      alert('프로젝트 설정 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleAddCategory = () => {
+    setCategoryModal({
+      isOpen: true,
+      category: null,
+      mode: 'add'
+    });
+  };
+
+  const handleEditCategory = (category) => {
+    setCategoryModal({
+      isOpen: true,
+      category: category,
+      mode: 'edit'
+    });
+  };
+
+  const handleDeleteCategory = (categoryId) => {
+    if (window.confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
+      try {
+        const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+        setCategories(updatedCategories);
+        localStorage.setItem(`project_${projectId}_categories`, JSON.stringify(updatedCategories));
+        alert('카테고리가 삭제되었습니다.');
+      } catch (error) {
+        console.error('카테고리 삭제 오류:', error);
+        alert('카테고리 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  const handleSaveCategory = (categoryData) => {
+    try {
+      let updatedCategories;
+      
+      if (categoryModal.mode === 'add') {
+        // 새 카테고리 추가
+        const newCategory = {
+          id: Date.now(),
+          ...categoryData,
+          projectId: projectId
+        };
+        updatedCategories = [...categories, newCategory];
+        alert('새 카테고리가 추가되었습니다.');
+      } else {
+        // 기존 카테고리 수정
+        updatedCategories = categories.map(cat => 
+          cat.id === categoryData.id ? { ...cat, ...categoryData } : cat
+        );
+        alert('카테고리가 수정되었습니다.');
+      }
+      
+      setCategories(updatedCategories);
+      localStorage.setItem(`project_${projectId}_categories`, JSON.stringify(updatedCategories));
+      setCategoryModal({ isOpen: false, category: null, mode: 'add' });
+    } catch (error) {
+      console.error('카테고리 저장 오류:', error);
+      alert('카테고리 저장 중 오류가 발생했습니다.');
+    }
+  };
+
+  // useEffect에서 프로젝트 설정 초기화
+  useEffect(() => {
+    if (projectInfo) {
+      setProjectSettings({
+        name: projectInfo.name || '',
+        description: projectInfo.description || ''
+      });
+    }
+  }, [projectInfo]);
+
+  // 샘플 카테고리 데이터 로드
+  useEffect(() => {
+    if (categories.length === 0) {
+      const sampleCategories = [
+        { id: 1, name: '일반', boardType: 'free', color: 'blue' },
+        { id: 2, name: '공지', boardType: 'notice', color: 'red' },
+        { id: 3, name: '질문', boardType: 'qna', color: 'green' }
+      ];
+      setCategories(sampleCategories);
+    }
+  }, [categories.length]);
+
+  if (!currentUser || !projectInfo) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* 헤더 */}
+      <header className="bg-white shadow-lg">
+        <div className="w-[1400px] mx-auto ">
+          <div className="flex items-center justify-between h-16">
+            {/* 로고 및 프로젝트명 */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <FontAwesomeIcon icon={sidebarOpen ? faTimes : faBars} className="h-6 w-6" />
+              </button>
+              
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <FontAwesomeIcon icon={faDashboard} className="h-6 w-6 text-white" />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-800">{projectInfo.name} 관리자</h1>
+              </div>
+            </div>
+
+            {/* 사용자 메뉴 */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleGoToProject}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
+                <FontAwesomeIcon icon={faHome} className="h-4 w-4" />
+                <span>프로젝트 홈으로</span>
+              </button>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <FontAwesomeIcon icon={faUserCog} className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-gray-800 font-medium">{currentUser.username}</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+              >
+                <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+                로그아웃
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex justify-center">
+        <div className='w-[1400px] flex'>
+        {/* 사이드바 */}
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
+          <div className="h-full flex flex-col">
+            {/* 사이드바 헤더 */}
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-800">관리 메뉴</h2>
+            </div>
+
+            {/* 네비게이션 메뉴 */}
+            <nav className="flex-1 p-4">
+              <ul className="space-y-2 flex flex-col items-center">
+                <li className="w-full">
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                      activeTab === 'dashboard' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faDashboard} className="h-5 w-5" />
+                    <span>대시보드</span>
+                  </button>
+                </li>
+                <li className="w-full">
+                  <button
+                    onClick={() => handleTabChange('board-management')}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                      activeTab.startsWith('board-') 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faNewspaper} className="h-5 w-5" />
+                    <span>게시판 관리</span>
+                  </button>
+                </li>
+                <li className="w-full">
+                  <button
+                    onClick={() => setActiveTab('user-management')}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                      activeTab === 'user-management' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faUsers} className="h-5 w-5" />
+                    <span>사용자 관리</span>
+                  </button>
+                </li>
+                <li className="w-full">
+                  <button
+                    onClick={() => setActiveTab('settings')}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                      activeTab === 'settings' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faCog} className="h-5 w-5" />
+                    <span>설정</span>
+                  </button>
+                </li>
+                <li className="w-full">
+                  <button
+                    onClick={() => setActiveTab('file-management')}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-colors ${
+                      activeTab === 'file-management' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FontAwesomeIcon icon={faFolder} className="h-5 w-5" />
+                    <span>파일 관리</span>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </aside>
+
+        {/* 메인 콘텐츠 */}
+        <main className="flex-1 p-6">
+          <div className="max-w-6xl mx-auto">
+            {activeTab === 'dashboard' && renderDashboardTab()}
+            {activeTab === 'user-management' && renderUserManagementTab()}
+            {activeTab === 'settings' && renderSettingsTab()}
+            {activeTab === 'file-management' && renderFileManagementTab()}
+            {activeTab.startsWith('board-') && renderBoardManagementTab()}
+            {renderPostEditorModal()}
+            {renderUserEditorModal()}
+            {renderCategoryEditorModal()}
+          </div>
+        </main>
+      </div>
+      </div>
+
+      {/* 푸터 */}
+      <footer className="bg-gray-200 border-t border-gray-300 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            {/* 왼쪽: 프로젝트 정보 */}
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <FontAwesomeIcon icon={faDashboard} className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">{projectInfo?.name || '프로젝트'} 관리자</h3>
+                <p className="text-sm text-gray-500">프로젝트 관리 시스템</p>
+              </div>
+            </div>
+
+            {/* 가운데: 링크 */}
+            <div className="flex space-x-6 text-sm text-gray-500">
+              <a href="#" className="hover:text-blue-600 transition-colors">이용약관</a>
+              <a href="#" className="hover:text-blue-600 transition-colors">개인정보처리방침</a>
+              <a href="#" className="hover:text-blue-600 transition-colors">고객지원</a>
+            </div>
+
+            {/* 오른쪽: 카피라이트 */}
+            <div className="text-sm text-gray-400">
+              <p>&copy; 2025 {projectInfo?.name || '프로젝트'}. All rights reserved.</p>
+              <p className="mt-1">Powered by Project CMS</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* 모바일 오버레이 */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ProjectAdminDashboard;

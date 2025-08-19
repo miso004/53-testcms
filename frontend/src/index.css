@@ -1,0 +1,20 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* Flowbite 컴포넌트 스타일 */
+@import 'flowbite/dist/flowbite.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Pretendard GOV', 'Pretendard', system-ui, sans-serif;
+  }
+  
+  body {
+    font-family: 'Pretendard GOV', 'Pretendard', system-ui, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+  }
+}
