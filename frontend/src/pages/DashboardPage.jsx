@@ -294,30 +294,40 @@ const DashboardPage = () => {
         )}
 
         {/* 환영 메시지 */}
-        <div className="mb-10">
-          <div className="flex items-center space-x-6 mb-6">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
-                <FontAwesomeIcon icon={faStar} className="h-10 w-10 text-white" />
+        <div className="mb-2">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
+                  <FontAwesomeIcon icon={faStar} className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-white" />
+                </div>
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-white" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800">
+                  안녕하세요, {user.username}님! 
+                </h1>
+                <p className="text-lg text-gray-600 ">
+                  오늘도 <span className="font-semibold text-blue-600">완벽한 웹사이트</span>를 만들어보세요
+                </p>
               </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold text-gray-800">
-                안녕하세요, {user.username}님! 
-              </h1>
-              <p className="text-xl text-gray-600 mt-2">
-                오늘도 <span className="font-semibold text-blue-600">완벽한 웹사이트</span>를 만들어보세요
-              </p>
-            </div>
+            
+            {/* 로그아웃 버튼 */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-1 px-2 py-1 mt-4 bg-white border border-gray-300 text-gray-600 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium"
+            >
+              <span>로그아웃</span>
+            </button>
           </div>
         </div>
 
         {/* 프로젝트 생성 버튼 */}
         <div className="mb-10">
-          <div className="bg-blue-600 rounded-3xl p-10 text-white border-0 shadow-2xl relative overflow-hidden">
+          <div className="bg-blue-600 rounded-2xl p-10 text-white border-0 shadow-2xl relative overflow-hidden">
             {/* 배경 패턴 */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
@@ -331,7 +341,7 @@ const DashboardPage = () => {
                 </div>
               </div>
               <h2 className="text-4xl font-bold mb-4">
-                🎯 새로운 프로젝트를 만들어보세요!
+                새로운 프로젝트를 만들어보세요!
               </h2>
               <p className="text-white/90 text-xl mb-10 leading-relaxed max-w-3xl mx-auto">
                 버튼을 클릭하면 자동으로 완성된 홈페이지와<br />
@@ -349,7 +359,7 @@ const DashboardPage = () => {
         </div>
 
         {/* 기존 프로젝트 목록 */}
-        <Card title="📁 기존 프로젝트" subtitle="생성된 프로젝트들을 확인하고 관리하세요" className="shadow-lg mb-10">
+        <Card title="기존 프로젝트" subtitle="생성된 프로젝트들을 확인하고 관리하세요" className="shadow-lg mb-10 ">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(() => {
               const projects = JSON.parse(localStorage.getItem('projects') || '[]');
@@ -366,7 +376,7 @@ const DashboardPage = () => {
               return projects.map((project, index) => (
                 <div 
                   key={project.id}
-                  className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-xl hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 transform hover:scale-[1.02] group"
+                  className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] group"
                 >
                   <div className="flex flex-col h-full">
                     <div className="flex-1">
@@ -379,20 +389,20 @@ const DashboardPage = () => {
                         <div>관리자: {project.adminUsername}</div>
                       </div>
                     </div>
-                    <div className="flex flex-col space-y-2 mt-4">
+                    <div className="flex flex-row gap-2 mt-4 ">
                       <button
                         onClick={() => handleViewProject(project.id)}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="w-2/3 flex items-center h-10 justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         <FontAwesomeIcon icon={faRocket} className="h-4 w-4" />
                         <span>프로젝트 보기</span>
                       </button>
                       <button
                         onClick={() => handleDeleteProject(project.id)}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        className="w-1/3 flex items-center h-10 justify-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                       >
                         <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
-                        <span>프로젝트 삭제</span>
+                        <span>삭제</span>
                       </button>
                     </div>
                   </div>
@@ -402,41 +412,55 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        {/* 최근 활동 */}
-        <Card title="📊 최근 활동" subtitle="시스템에서 발생한 최근 활동들을 확인하세요" className="shadow-lg">
-          <div className="space-y-4">
-            {stats.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300">
-                <div className="flex-shrink-0">
-                  {getActivityIcon(activity.type)}
+        
+      </div>
+      {/* 푸터 */}
+      <footer className="mt-14 pt-12 pb-8 border-t border-gray-300 bg-gray-300 text-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
+              {/* 왼쪽: 브랜드 정보 */}
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faStar} className="h-5 w-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">
-                    {activity.action}
-                    {activity.project && (
-                      <span className="text-indigo-600 font-semibold ml-2">"{activity.project}"</span>
-                    )}
-                    {activity.user && (
-                      <span className="text-purple-600 font-semibold ml-2">"{activity.user}"</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 flex items-center">
-                    <FontAwesomeIcon icon={faClock} className="h-3 w-3 mr-1" />
-                    {activity.time}
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  <div className={`w-3 h-3 rounded-full ${
-                    activity.type === 'success' ? 'bg-success' :
-                    activity.type === 'info' ? 'bg-info' :
-                    activity.type === 'warning' ? 'bg-warning' : 'bg-gray-400'
-                  }`}></div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Project CMS</h3>
+                  <p className="text-sm text-gray-600">완벽한 웹사이트 구축 시스템</p>
                 </div>
               </div>
-            ))}
+
+              {/* 가운데: 링크 */}
+              <div className="flex space-x-8 text-sm text-gray-600">
+                <a href="#" className="hover:text-blue-600 transition-colors duration-200">이용약관</a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-200">개인정보처리방침</a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-200">고객지원</a>
+                <a href="#" className="hover:text-blue-600 transition-colors duration-200">문의하기</a>
+              </div>
+
+              {/* 오른쪽: 카피라이트 */}
+              <div className="text-sm text-gray-600 text-center md:text-right">
+                <p>&copy; 2025 Project CMS. All rights reserved.</p>
+                <p className="mt-1">Made with ❤️ for better web experiences</p>
+              </div>
+            </div>
+            
+            {/* 하단 구분선 */}
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                <p className="text-xs text-gray-600">
+                  현재 버전: v1.0.0 | 최종 업데이트: {new Date().toLocaleDateString('ko-KR')}
+                </p>
+                <div className="flex items-center space-x-4 text-xs text-gray-600">
+                  <span>React 19.1.1</span>
+                  <span>•</span>
+                  <span>Vite 7.1.2</span>
+                  <span>•</span>
+                  <span>Tailwind CSS 3.4.17</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </Card>
-      </div>
+        </footer>
     </div>
   );
 };

@@ -26,6 +26,14 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 이미 로그인된 상태라면 대시보드로 리다이렉트
+  React.useEffect(() => {
+    const superAdmin = localStorage.getItem('superAdmin');
+    if (superAdmin) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -49,7 +57,10 @@ const LoginPage = () => {
           password: formData.password, // 비밀번호도 저장 (로그인 검증용)
           loginTime: new Date().toISOString()
         }));
-        navigate('/dashboard');
+        // 브라우저 히스토리 교체하여 뒤로가기 방지
+        navigate('/dashboard', { replace: true });
+        // 추가로 히스토리 상태 정리
+        window.history.pushState(null, '', '/dashboard');
       } else {
         console.log('로그인 실패: 잘못된 자격증명'); // 디버깅 로그
         setError('아이디 또는 비밀번호가 올바르지 않습니다.');
@@ -63,30 +74,26 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#6875e0] flex items-center justify-center p-4 font-pretendard">
-      {/* 상단 네비게이션 */}
-      <div className="absolute top-6 left-6">
-        <a href="/" className="flex items-center text-gray-500 hover:text-gray-700 transition-colors">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span className="text-sm">Home page</span>
-        </a>
+    <div className="min-h-screen flex items-center justify-center p-4 font-pretendard relative overflow-hidden">
+      {/* 배경 이미지 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+        {/* 어두운 오버레이 */}
+        <div className="absolute inset-0 bg-black/70"></div>
       </div>
 
-      {/* 브랜드 로고 */}
-      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-2">
-        
-        <span className="text-2xl font-bold text-white"></span>
-      </div>
 
       {/* 메인 로그인 카드 */}
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
           {/* 환영 메시지 */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Welcome CMS System!</h1>
-            <p className="text-gray-600">Welcome to the full management system</p>
+            <p className="text-gray-600">cms시스템에 오신 걸 환영합니다.</p>
           </div>
 
           {/* 로그인 폼 */}
@@ -166,7 +173,7 @@ const LoginPage = () => {
         </div>
 
         {/* 테스트 계정 정보 */}
-        <div className="mt-6 p-4 bg-blue-50/50 rounded-lg border border-blue-200">
+        <div className="mt-6 p-4 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/50 relative z-10">
           <div className="text-center">
             <p className="text-sm text-blue-800 font-medium mb-2">테스트 계정</p>
             <div className="grid grid-cols-2 gap-4 text-xs">

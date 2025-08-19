@@ -1,0 +1,381 @@
+{
+  "meta": {
+    "title": "Future Health Design – UX/UI 디자인 원칙 요약",
+    "source_url": "https://www.behance.net/gallery/98238171/Future-Health-Design",
+    "published": "2020-06-15",
+    "owners": [
+      {
+        "name": "Irina Ermakova"
+      },
+      {
+        "name": "Yuliya Solovieva"
+      },
+      {
+        "name": "Alexandra Maximenko"
+      },
+      {
+        "name": "Ivan Kuksin"
+      }
+    ],
+    "prepared_at": "2025-08-19 17:46:08 +0900",
+    "prepared_by": "ChatGPT (GPT-5 Thinking)"
+  },
+  "global_principles": [
+    {
+      "principle": "개인화된 환자 중심",
+      "description": "대시보드와 주요 화면은 사용자의 상태와 할 일(복약, 예약, 메시지)을 우선적으로 보여준다. 환자와 의사 모두에게 유용하도록 동일 데이터의 뷰를 상황별로 제공한다.",
+      "design_links": {
+        "layout": [
+          "좌측 고정 내비게이션 + 상단 요약헤더",
+          "첫 화면 카드형 KPI"
+        ],
+        "components": [
+          "상태 카드",
+          "할 일(Tasks) 카드",
+          "알림/메시지 패널"
+        ],
+        "content": [
+          "환자 기본정보, 오늘 일정, 핵심 지표"
+        ]
+      }
+    },
+    {
+      "principle": "명확한 정보 구조",
+      "description": "‘MY DATA’를 루트로 분석, 약, 의사·클리닉, 건강히스토리, 검사결과, 메시지로 상위 카테고리를 명확히 분리한다.",
+      "design_links": {
+        "ia": [
+          "루트: MY DATA",
+          "상위 섹션 6개"
+        ],
+        "navigation": [
+          "섹션 아이콘화된 사이드바",
+          "섹션별 탭"
+        ]
+      }
+    },
+    {
+      "principle": "시각적 우선순위와 색 의미 부여",
+      "description": "강조 카드와 알림은 높은 채도의 색(블루/레드/옐로/오렌지 등)으로 상태·위험도를 즉시 구분할 수 있게 한다. 본문은 중립 톤으로 가독성 유지.",
+      "design_links": {
+        "color": [
+          "강조: Primary/Warning/Danger/Info",
+          "본문: 중립 Surface/On-surface"
+        ],
+        "typography": [
+          "헤드라인은 굵게, 본문은 안정된 가독 폰트"
+        ]
+      }
+    },
+    {
+      "principle": "작업 중심 인터랙션",
+      "description": "캘린더에서 복약/진료 일정을 직접 관리하고, 의사 찾기/예약, 메시지 상담 등 핵심 업무가 화면 내에서 끊김 없이 이루어진다.",
+      "design_links": {
+        "flows": [
+          "캘린더 일정 생성/변경",
+          "의사 검색→필터→예약",
+          "메시지·화상상담"
+        ],
+        "components": [
+          "필터 패널",
+          "시간 슬롯 피커",
+          "채팅 리스트/쓰레드"
+        ]
+      }
+    },
+    {
+      "principle": "밝은/어두운 테마 일관성",
+      "description": "라이트/다크 테마 간 색 대비와 의미(역할)를 유지하여 어디서든 동일한 정보 해석이 가능하도록 한다.",
+      "design_links": {
+        "tokens": [
+          "role 기반 색 토큰",
+          "카드/표/캘린더 대비 유지"
+        ]
+      }
+    }
+  ],
+  "information_architecture": {
+    "root": "MY DATA",
+    "sections": [
+      {
+        "id": "analytics",
+        "label": "분석",
+        "children": [
+          "상관관계",
+          "건강평가"
+        ]
+      },
+      {
+        "id": "medications",
+        "label": "약",
+        "children": [
+          "복약 일정",
+          "온라인 약국",
+          "처방전",
+          "완료된 복약"
+        ]
+      },
+      {
+        "id": "doctors_clinics",
+        "label": "의사·클리닉",
+        "children": [
+          "의사",
+          "클리닉"
+        ]
+      },
+      {
+        "id": "health_history",
+        "label": "건강 히스토리",
+        "children": [
+          "문진/병력",
+          "예방접종",
+          "의사 소견",
+          "의무기록"
+        ]
+      },
+      {
+        "id": "lab_results",
+        "label": "검사결과",
+        "children": [
+          "최근 결과",
+          "전체 결과",
+          "통계"
+        ]
+      },
+      {
+        "id": "messages",
+        "label": "메시지",
+        "children": [
+          "채팅",
+          "영상통화"
+        ]
+      }
+    ]
+  },
+  "visual_system": {
+    "typography": {
+      "primary_family": "Gotham Pro",
+      "weights": [
+        "Regular",
+        "Medium",
+        "Bold"
+      ],
+      "usage": {
+        "headline": "Bold/Medium, 짧고 명확한 제목",
+        "body": "Regular, 충분한 행간과 대비",
+        "numeric": "카드형 KPI는 대형 숫자와 짧은 라벨"
+      }
+    },
+    "color": {
+      "tokens": {
+        "primary": "강조 블루 (인터랙션/강조)",
+        "info": "시각화와 중립 알림에 사용",
+        "success": "긍정 상태",
+        "warning": "주의 상태",
+        "danger": "위험/경고",
+        "surface": "밝은 배경(라이트) / 아주 어두운 배경(다크)",
+        "on_surface": "본문 텍스트",
+        "muted": "보조 텍스트/라벨"
+      },
+      "guidelines": [
+        "상태 카드·배지에 의미 색을 일관 적용",
+        "본문/테이블은 중립 톤으로 정보밀도↑, 피로감↓",
+        "데이터 시각화는 2–3색 대비 위주, 과도한 팔레트 지양"
+      ]
+    },
+    "dark_mode": {
+      "background": "딥 그레이(청색 기)",
+      "elevation": "카드/모달에 미세한 음영으로 계층 표현",
+      "contrast": "텍스트 대비 AA 이상 유지, 강조색 채도 약간 상향"
+    },
+    "iconography": {
+      "style": "간결한 라인 아이콘",
+      "usage": "사이드바 섹션 구분과 상태 배지 보조 표기"
+    }
+  },
+  "layout_grid": {
+    "container": "대형 데스크탑 기준 1200–1440px 컨테이너",
+    "grid": "12 컬럼 그리드, 카드형 콘텐츠 행 배치",
+    "spacing": "8pt 단위, 카드 간 충분한 여백",
+    "panels": "좌측 고정 내비게이션, 우측 컨텍스트 패널(필터/세부정보)",
+    "responsive": {
+      "tablet": "사이드바 축소(아이콘), 카드 2열",
+      "mobile": "하단 탭 내비게이션, 핵심 KPI 우선"
+    }
+  },
+  "components": {
+    "navigation": {
+      "left_sidebar": "아이콘+라벨, 현재 섹션 강조",
+      "topbar": "사용자 스위처/알림/검색"
+    },
+    "dashboard_cards": {
+      "purpose": "핵심 지표(KPI)와 추세를 한눈에",
+      "content": [
+        "지수(예: 건강 점수)",
+        "미니 차트",
+        "상태 라벨"
+      ],
+      "behavior": [
+        "카드 클릭 시 상세로 딥링크",
+        "색으로 상태 구분"
+      ]
+    },
+    "calendar": {
+      "views": [
+        "일/주/월"
+      ],
+      "interactions": [
+        "드래그로 일정 이동",
+        "약 복용/진료 예약 생성·수정",
+        "중요 이벤트 강조"
+      ],
+      "empty_states": [
+        "‘일정 추가’ 안내와 샘플"
+      ]
+    },
+    "chat": {
+      "structure": [
+        "좌: 대화 리스트",
+        "우: 쓰레드",
+        "상단: 환자/의사 정보"
+      ],
+      "capabilities": [
+        "파일/이미지",
+        "의료진 멘션",
+        "알림 설정"
+      ],
+      "safety": [
+        "민감정보 표시 시 주의 배지"
+      ]
+    },
+    "medications": {
+      "layout": [
+        "좌: 캘린더/필터",
+        "우: 복약 스케줄 카드 리스트"
+      ],
+      "actions": [
+        "복약 알림 설정",
+        "‘건너뛰기/복용’ 토글",
+        "부작용 신고"
+      ],
+      "empties": [
+        "처방 추가 유도"
+      ]
+    },
+    "doctor_finder": {
+      "filters": [
+        "전문과",
+        "거리/가용시간",
+        "평점/가격"
+      ],
+      "views": [
+        "리스트",
+        "지도"
+      ],
+      "booking": [
+        "슬롯 피커",
+        "예약 확인 모달"
+      ]
+    },
+    "map": {
+      "markers": "클리닉/의사 위치 클러스터",
+      "tooltip": "간단 정보, 예약 바로가기"
+    },
+    "health_history": {
+      "panels": [
+        "신체 맵+포인트",
+        "의사 소견 카드",
+        "도넛/리스트"
+      ],
+      "goal": "과거 기록 맥락 속 현재 상태 이해"
+    },
+    "analytics": {
+      "charts": [
+        "라인/영역 그래프",
+        "예측 위젯"
+      ],
+      "insight_panels": [
+        "위험 지표 경고 토스트/배지"
+      ]
+    },
+    "patient_card": {
+      "top_summary": [
+        "프로필/연락처/알레르기 배지",
+        "상단 알림"
+      ],
+      "tabs": [
+        "검사 지표",
+        "투약",
+        "방문 기록"
+      ],
+      "table": "검사결과 테이블 + 단위/참고범위"
+    },
+    "tables": {
+      "features": [
+        "정렬/필터/페이지네이션",
+        "행 강조(이상치)"
+      ]
+    },
+    "filters": {
+      "pattern": "좌측 슬라이드 패널 또는 상단 칩",
+      "state": "활성 필터를 칩으로 노출, ‘모두 지우기’ 제공"
+    },
+    "alerts_toasts": {
+      "severity_levels": [
+        "info",
+        "warning",
+        "danger"
+      ],
+      "rules": [
+        "중요 경보는 지속 배너, 일반 알림은 토스트"
+      ]
+    },
+    "modals": {
+      "usage": [
+        "예약 확인",
+        "민감 데이터 경고"
+      ]
+    }
+  },
+  "accessibility_and_content": {
+    "language": "다국어 지원(러시아어 사례) — 레이블은 짧고 전문용어는 Plain Language로 보완",
+    "readability": "긴 설명은 카드/아코디언으로 분할, 숫자는 단위·참고범위 동반",
+    "contrast": "텍스트/아이콘 대비 WCAG AA 이상",
+    "focus_order": "키보드 탭 순서가 시각 흐름과 일치",
+    "feedback": "상태 변화(복약 완료, 예약 확정)는 즉시 확인 가능하게 토스트/배지 업데이트",
+    "error_prevention": "예약/취소는 재확인 모달"
+  },
+  "design_tokens_example": {
+    "color": {
+      "primary": "{blue.600}",
+      "info": "{blue.500}",
+      "success": "{green.600}",
+      "warning": "{orange.600}",
+      "danger": "{red.600}",
+      "surface": "{slate.50} | {slate.900}",
+      "on_surface": "{slate.900} | {slate.50}",
+      "muted": "{slate.500}"
+    },
+    "radius": {
+      "card": 16,
+      "button": 10,
+      "chip": 8
+    },
+    "shadow": {
+      "elevation1": "0 2px 8px rgba(0,0,0,0.08)"
+    },
+    "spacing": {
+      "unit": 8
+    }
+  },
+  "page_templates": [
+    "Dashboard/Home",
+    "Calendar",
+    "Messages",
+    "Medications",
+    "Doctors & Clinics (List/Map)",
+    "Health History",
+    "Analytics",
+    "Patient Card (Doctor view)"
+  ],
+  "notes": "위 원칙은 Behance 사례의 화면/설명에 근거해 맥락화한 요약입니다. 색상값은 실제 값이 아닌 역할 기반 토큰 예시로 제안되었습니다."
+}

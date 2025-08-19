@@ -1347,7 +1347,7 @@ const ProjectAdminDashboard = () => {
                 handleAddUser={handleAddUser}
                 handleEditUser={handleEditUser}
                 handleDeleteUser={handleDeleteUser}
-                handleBulkDelete={handleBulkDelete}
+                handleBulkDelete={handleBulkDeleteUsers}
                 setUserModal={setUserModal}
               />
             )}
