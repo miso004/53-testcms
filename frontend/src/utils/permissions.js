@@ -73,3 +73,4 @@ export const getCurrentUser = (projectId = null) => {
     return null;
   }
 };
+

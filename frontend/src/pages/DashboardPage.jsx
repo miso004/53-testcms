@@ -268,11 +268,22 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-pretendard">
-      <div className="p-8 max-w-[1400px] mx-auto">
+    <div className="min-h-screen font-pretendard relative overflow-hidden">
+      {/* 배경 이미지 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+        {/* 어두운 오버레이 */}
+        <div className="absolute inset-0 bg-black/70"></div>
+      </div>
+      
+      <div className="relative z-10 p-8 max-w-[1400px] mx-auto">
         {/* 성공 메시지 알림 */}
         {successMessage && (
-          <div className="mb-8 bg-green-50 border border-green-200 rounded-2xl p-6">
+          <div className="mb-8 bg-green-50/90 backdrop-blur-sm border border-green-200/50 rounded-2xl p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
@@ -306,10 +317,10 @@ const DashboardPage = () => {
                 </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+                <h1 className="text-2xl font-bold text-gray-200">
                   안녕하세요, {user.username}님! 
                 </h1>
-                <p className="text-lg text-gray-600 ">
+                <p className="text-lg text-gray-500 ">
                   오늘도 <span className="font-semibold text-blue-600">완벽한 웹사이트</span>를 만들어보세요
                 </p>
               </div>
@@ -318,7 +329,7 @@ const DashboardPage = () => {
             {/* 로그아웃 버튼 */}
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-1 px-2 py-1 mt-4 bg-white border border-gray-300 text-gray-600 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium"
+              className="flex items-center space-x-1 px-2 py-1 mt-4 bg-white/20 border  border-gray-300/40 text-gray-300 rounded-xl hover:bg-blue-100 transition-colors text-sm font-medium"
             >
               <span>로그아웃</span>
             </button>
@@ -327,7 +338,7 @@ const DashboardPage = () => {
 
         {/* 프로젝트 생성 버튼 */}
         <div className="mb-10">
-          <div className="bg-blue-600 rounded-2xl p-10 text-white border-0 shadow-2xl relative overflow-hidden">
+          <div className="bg-blue-600/40 border border-blue-600/60 rounded-2xl p-10 text-white shadow-2xl relative overflow-hidden">
             {/* 배경 패턴 */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
@@ -359,7 +370,7 @@ const DashboardPage = () => {
         </div>
 
         {/* 기존 프로젝트 목록 */}
-        <Card title="기존 프로젝트" subtitle="생성된 프로젝트들을 확인하고 관리하세요" className="shadow-lg mb-10 ">
+        <Card title="기존 프로젝트" subtitle="생성된 프로젝트들을 확인하고 관리하세요" className="shadow-lg mb-10 bg-gray-100 border-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(() => {
               const projects = JSON.parse(localStorage.getItem('projects') || '[]');
@@ -376,7 +387,7 @@ const DashboardPage = () => {
               return projects.map((project, index) => (
                 <div 
                   key={project.id}
-                  className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] group"
+                  className="bg-white shadow-sm backdrop-blur-sm rounded-xl p-6 border border-gray-300 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] group"
                 >
                   <div className="flex flex-col h-full">
                     <div className="flex-1">

@@ -191,38 +191,25 @@ const CreateProjectPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 font-pretendard">
-      {/* 상단 헤더 */}
-      {/* <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-              <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-gray-800">Project CMS</span>
-          </div>
-          
-        
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">안녕하세요, {user.username}님</span>
-            <button
-              onClick={() => navigate('/login')}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
-            >
-              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4" />
-              <span>로그아웃</span>
-            </button>
-          </div>
-        </div>
-      </div> */}
-
+    <div className="min-h-screen font-pretendard relative overflow-hidden">
+      {/* 배경 이미지 */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+          alt="Background" 
+          className="w-full h-full object-cover"
+        />
+        {/* 어두운 오버레이 */}
+        <div className="absolute inset-0 bg-black/70"></div>
+      </div>
+      
       {/* 메인 콘텐츠 */}
-      <div className="p-8 max-w-[1200px] mx-auto">
+      <div className="relative z-10 p-8 max-w-[1200px] mx-auto">
         {/* 뒤로가기 버튼 */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg transition-all duration-300 rounded-2xl border border-gray-200/50 hover:border-gray-300"
+            className="flex items-center space-x-2 px-5 py-3 bg-white backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg transition-all duration-300 rounded-2xl border border-gray-200/50 hover:border-gray-300"
           >
             <FontAwesomeIcon icon={faArrowLeft} className="h-4 w-4" />
             <span className="font-medium">대시보드로 돌아가기</span>
@@ -235,15 +222,15 @@ const CreateProjectPage = () => {
             <div className="flex items-center space-x-6">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold transition-all duration-500 ${
                 step >= 1 
-                  ? 'bg-blue-500 text-white shadow-xl scale-105' 
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-blue-500/50 border border-blue-400/70 text-white shadow-xl scale-105' 
+                  : 'bg-gray-100/50 text-gray-400'
               }`}>
                 1
               </div>
               <div className={`w-24 h-2 rounded-full transition-all duration-500 ${
                 step >= 2 
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
-                  : 'bg-gray-200'
+                  : 'bg-gray-200/80'
               }`}></div>
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold transition-all duration-500 ${
                 step >= 2 
@@ -256,9 +243,9 @@ const CreateProjectPage = () => {
           </div>
           <div className="text-center mt-6">
             <span className={`text-xl font-semibold transition-all duration-300 ${
-              step === 1 ? 'text-blue-600' : 'text-purple-600'
+              step === 1 ? 'text-white' : 'text-white'
             }`}>
-              {step === 1 ? '📝 프로젝트 정보 입력' : '👑 관리자 계정 생성'}
+              {step === 1 ? ' 프로젝트 정보 입력' : ' 관리자 계정 생성'}
             </span>
           </div>
         </div>
@@ -266,12 +253,12 @@ const CreateProjectPage = () => {
         {/* 프로젝트 생성 폼 */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 p-10">
           <div className="text-center mb-10">
-            <div className="flex justify-center mb-6">
+            {/* <div className="flex justify-center mb-6">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl">
                 <FontAwesomeIcon icon={faWandMagicSparkles} className="h-12 w-12 text-white" />
               </div>
-            </div>
-            <h2 className="text-4xl font-bold text-gray-800 mb-3">
+            </div> */}
+            <h2 className="text-4xl font-bold text-gray-800 mb-3 mt-3">
               새 프로젝트 생성
             </h2>
             <p className="text-gray-600 text-xl leading-relaxed">
@@ -311,25 +298,25 @@ const CreateProjectPage = () => {
               </div>
 
               {/* 자동 생성될 기능들 미리보기 */}
-              <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 p-8 rounded-3xl border border-blue-100/50">
+              <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 p-7 rounded-3xl border border-blue-200">
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center">
-                    <FontAwesomeIcon icon={faLightbulb} className="h-6 w-6 text-yellow-600" />
+                    <FontAwesomeIcon icon={faLightbulb} className="h-5 w-5 text-yellow-600" />
                   </div>
-                  <h4 className="text-2xl font-bold text-gray-800">자동으로 생성될 기능들</h4>
+                  <h4 className="text-xl font-bold text-gray-800">자동으로 생성될 기능들</h4>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     '게시판 3개 (공지/자유/질문)',
                     '회원관리 시스템',
                     '카테고리 관리',
                     '기본 홈페이지 레이아웃'
                   ].map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-4 bg-white/70 rounded-2xl border border-white/50">
-                      <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-white/70 rounded-2xl border border-white/50">
+                      <div className="w-7 h-7 bg-green-100 rounded-xl flex items-center justify-center">
                         <FontAwesomeIcon icon={faCheck} className="h-4 w-4 text-green-600" />
                       </div>
-                      <span className="font-semibold text-gray-700 text-lg">{feature}</span>
+                      <span className=" text-gray-600 text-base">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -408,7 +395,7 @@ const CreateProjectPage = () => {
               <div className="flex justify-between pt-4">
                 <button
                   onClick={handleBack}
-                  className="px-8 py-4 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 rounded-2xl font-bold text-lg text-gray-700"
+                  className="px-8 py-4 border-2 bg-white hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 rounded-2xl font-bold text-lg text-gray-700"
                 >
                   이전 단계
                 </button>

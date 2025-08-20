@@ -31,7 +31,20 @@
 - **게시판 관리**: 게시글 CRUD 기능
 - **파일 관리**: 파일 업로드 및 관리
 
+### 5. 통일된 디자인 시스템
+- **배경 이미지 통일**: 로그인, 대시보드, 프로젝트 생성 페이지에서 동일한 배경 이미지 사용
+- **일관된 UI 스타일**: 모든 페이지에서 동일한 디자인 패턴 적용
+- **반투명 요소**: `backdrop-blur-sm` 효과로 모던한 글래스모피즘 디자인
+- **색상 일관성**: 전체 시스템에서 통일된 색상 팔레트 사용
+
 ## 🎨 UI/UX 디자인
+
+### 통일된 배경 이미지 시스템
+- **로그인 페이지**: 산맥 배경 이미지 (`photo-1506905925346-21bda4d32df4`)
+- **대시보드 페이지**: 로그인 페이지와 동일한 배경 이미지 적용
+- **CreateProject 페이지**: 대시보드와 동일한 배경 이미지 적용
+- **배경 스타일**: 전체 화면 배경 이미지 + 어두운 오버레이 (`bg-black/70`)
+- **UI 요소**: 반투명 배경 (`bg-white/90 backdrop-blur-sm`)으로 배경 위 가독성 확보
 
 ### 헤더 디자인
 ```
@@ -107,6 +120,22 @@ const [categories, setCategories] = useState([]);
 const [users, setUsers] = useState([]);
 const [posts, setPosts] = useState({});
 const [categoryModal, setCategoryModal] = useState({ isOpen: false, category: null, mode: 'add' });
+```
+
+### 배경 이미지 시스템 구현
+```javascript
+// 공통 배경 이미지 구조
+<div className="absolute inset-0 z-0">
+  <img 
+    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+    alt="Background" 
+    className="w-full h-full object-cover"
+  />
+  <div className="absolute inset-0 bg-black/70"></div>
+</div>
+
+// UI 요소 배경 스타일
+className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20"
 ```
 
 ### 데이터 로딩 및 동기화
@@ -267,6 +296,8 @@ const notifyProjectHomepage = () => {
 - ✅ 부드러운 애니메이션 및 전환 효과
 - ✅ 모바일 친화적 디자인
 - ✅ 일관된 UI/UX 패턴
+- ✅ 통일된 배경 이미지로 브랜드 일관성 확보
+- ✅ 글래스모피즘 디자인으로 모던한 시각적 경험
 
 ## 📝 결론
 
