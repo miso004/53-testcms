@@ -342,7 +342,7 @@ const ProjectTemplate = () => {
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <header className="bg-white shadow-lg py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1400px] mx-auto sm:px-6 lg:px-8">
           {/* 상단 로고 및 프로젝트명 */}
           <div className="flex items-center justify-between h-16">
             {/* 왼쪽: 로고 및 프로젝트명 */}

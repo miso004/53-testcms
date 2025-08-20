@@ -639,7 +639,7 @@ const ProjectTemplate = () => {
   };
 
   const renderHomeTab = () => (
-    <div className="space-y-8">
+    <div className="space-y-12 mt-7">
       {/* 주요 기능 소개 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {categories.slice(0, 3).map((category, index) => {
@@ -1447,7 +1447,7 @@ const ProjectTemplate = () => {
       )}
 
       {/* 푸터 */}
-      <footer className="bg-gray-200 border-t border-gray-300 mt-auto">
+      <footer className="bg-gray-200 border-t border-gray-300 mt-10">
         <div className="max-w-[1400px] mx-auto  py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             {/* 왼쪽: 프로젝트 정보 */}
