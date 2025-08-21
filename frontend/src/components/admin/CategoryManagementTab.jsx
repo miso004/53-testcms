@@ -58,11 +58,15 @@ const CategoryManagementTab = ({
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                   category.boardType === 'notice' ? 'bg-blue-100 text-blue-600' :
                   category.boardType === 'free' ? 'bg-green-100 text-green-600' :
-                  'bg-purple-100 text-purple-600'
+                  category.boardType === 'qna' ? 'bg-purple-100 text-purple-600' :
+                  category.boardType === 'gallery' ? 'bg-pink-100 text-pink-600' :
+                  'bg-gray-100 text-gray-600'
                 }`}>
                   {category.boardType === 'notice' ? '공지사항' :
                    category.boardType === 'free' ? '자유게시판' :
-                   '질문게시판'}
+                   category.boardType === 'qna' ? '질문게시판' :
+                   category.boardType === 'gallery' ? '갤러리게시판' :
+                   category.boardType}
                 </span>
               )}
             </div>

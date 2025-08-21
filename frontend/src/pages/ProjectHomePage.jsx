@@ -12,7 +12,10 @@ import {
   faSearch,
   faCog,
   faRocket,
-  faShieldAlt
+  faShieldAlt,
+  faImage,
+  faEye,
+  faTrash
 } from '@fortawesome/free-solid-svg-icons';
 import UserAuth from '../components/UserAuth';
 import PostEditor from '../components/PostEditor';
@@ -825,35 +828,109 @@ const ProjectTemplate = () => {
 
         {/* 게시글 목록 */}
         {searchResults.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-            <div className="grid grid-cols-12 bg-gray-50 p-4 font-semibold text-gray-700">
-              <div className="col-span-1">번호</div>
-              <div className="col-span-6">제목</div>
-              <div className="col-span-2">작성자</div>
-              <div className="col-span-2">작성일</div>
-              <div className="col-span-1">조회</div>
-            </div>
-            
-            {boardData && boardData.length > 0 ? (
-              boardData.map((post, index) => (
-                <div 
-                  key={post.id} 
-                  className="grid grid-cols-12 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
-                  onClick={() => handleViewPost(post)}
-                >
-                  <div className="col-span-1 text-gray-500">{boardData.length - index}</div>
-                  <div className="col-span-5 font-medium text-gray-800">{post.title}</div>
-                  <div className="col-span-2 text-gray-600">{post.author}</div>
-                  <div className="col-span-2 text-gray-500">{post.date}</div>
-                  <div className="col-span-1 text-gray-500">{post.views}</div>
-                </div>
-              ))
+          <>
+            {boardType === 'gallery' ? (
+              // 갤러리 게시판용 이미지 그리드 레이아웃
+              <div className="bg-white rounded-2xl shadow-lg p-6">
+                {boardData && boardData.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {boardData.map((post, index) => (
+                      <div 
+                        key={post.id} 
+                        className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden group"
+                        onClick={() => handleViewPost(post)}
+                      >
+                        {/* 이미지 영역 */}
+                        <div className="aspect-square bg-gray-100 overflow-hidden">
+                          {post.files && post.files.length > 0 && post.files[0].type?.startsWith('image/') ? (
+                            <img
+                              src={post.files[0].url || (post.files[0].url ? post.files[0].url : '/placeholder-image.jpg')}
+                              alt={post.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full flex items-center justify-center ${post.files && post.files.length > 0 && post.files[0].type?.startsWith('image/') ? 'hidden' : ''}`}>
+                            <div className="text-center">
+                              <FontAwesomeIcon icon={faImage} className="h-12 w-12 text-gray-300 mb-2" />
+                              <p className="text-sm text-gray-400">이미지 없음</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 게시글 정보 */}
+                        <div className="p-4">
+                          <h3 className="font-semibold text-gray-800 text-lg mb-2 group-hover:text-blue-600 transition-colors overflow-hidden" style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            textOverflow: 'ellipsis'
+                          }}>
+                            {post.title}
+                          </h3>
+                          <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+                            <span className="flex items-center">
+                              <FontAwesomeIcon icon={faUser} className="h-3 w-3 mr-1" />
+                              {post.author}
+                            </span>
+                            <span className="flex items-center">
+                              <FontAwesomeIcon icon={faEye} className="h-3 w-3 mr-1" />
+                              {post.views || 0}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {post.date}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FontAwesomeIcon icon={faImage} className="h-12 w-12 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 text-lg mb-2">아직 갤러리 게시글이 없습니다</p>
+                    <p className="text-gray-400">첫 번째 이미지를 업로드해보세요!</p>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <p>아직 게시글이 없습니다.</p>
+              // 일반 게시판용 테이블 레이아웃
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="grid grid-cols-12 bg-gray-50 p-4 font-semibold text-gray-700">
+                  <div className="col-span-1">번호</div>
+                  <div className="col-span-6">제목</div>
+                  <div className="col-span-2">작성자</div>
+                  <div className="col-span-2">작성일</div>
+                  <div className="col-span-1">조회</div>
+                </div>
+                
+                {boardData && boardData.length > 0 ? (
+                  boardData.map((post, index) => (
+                    <div 
+                      key={post.id} 
+                      className="grid grid-cols-12 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => handleViewPost(post)}
+                    >
+                      <div className="col-span-1 text-gray-500">{boardData.length - index}</div>
+                      <div className="col-span-5 font-medium text-gray-800">{post.title}</div>
+                      <div className="col-span-2 text-gray-600">{post.author}</div>
+                      <div className="col-span-2 text-gray-500">{post.date}</div>
+                      <div className="col-span-1 text-gray-500">{post.views || 0}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    <p>아직 게시글이 없습니다.</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     );
@@ -900,6 +977,74 @@ const ProjectTemplate = () => {
     // navigate() 호출하지 않음 - 현재 페이지에 머물
   };
 
+  // 파일 크기 포맷 함수
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // 파일 다운로드 함수
+  const handleFileDownload = (file) => {
+    try {
+      if (file.url) {
+        // URL이 있는 경우 (이미지 파일)
+        const link = document.createElement('a');
+        link.href = file.url;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // URL이 없는 경우 (일반 파일)
+        alert('파일을 다운로드할 수 없습니다. 파일 정보가 불완전합니다.');
+      }
+    } catch (error) {
+      console.error('파일 다운로드 오류:', error);
+      alert('파일 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 게시글 삭제 함수
+  const handleDeletePost = (postToDelete) => {
+    if (!postToDelete) return;
+    
+    const confirmMessage = `"${postToDelete.title}" 게시글을 삭제하시겠습니까?\n\n삭제된 게시글은 복구할 수 없습니다.`;
+    
+    if (confirm(confirmMessage)) {
+      try {
+        // localStorage에서 게시글 삭제
+        const existingPosts = JSON.parse(localStorage.getItem(`project_${projectId}_posts`) || '{}');
+        
+        if (existingPosts[postToDelete.boardType]) {
+          // 해당 게시판에서 해당 게시글 제거
+          existingPosts[postToDelete.boardType] = existingPosts[postToDelete.boardType].filter(
+            post => post.id !== postToDelete.id
+          );
+          
+          // localStorage에 저장
+          localStorage.setItem(`project_${projectId}_posts`, JSON.stringify(existingPosts));
+          
+          // 상태 업데이트
+          setPosts(existingPosts);
+          
+          // 상세보기 모드에서 목록으로 돌아가기
+          setSelectedPost(null);
+          
+          // 해당 게시글의 댓글도 삭제
+          localStorage.removeItem(`project_${projectId}_comments_${postToDelete.id}`);
+          
+          alert('게시글이 삭제되었습니다.');
+        }
+      } catch (error) {
+        console.error('게시글 삭제 오류:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
   // 일반 페이지 렌더링
   const renderPageContent = (category) => {
     const canEdit = currentUser && 
@@ -940,15 +1085,31 @@ const ProjectTemplate = () => {
     const boardNames = {
       notice: '공지사항',
       free: '자유게시판',
-      qna: '질문게시판'
+      qna: '질문게시판',
+      gallery: '갤러리게시판'
     };
 
-    const canEdit = currentUser && 
-                   selectedPost.authorId && 
-                   (String(currentUser.id) === String(selectedPost.authorId) || 
-                    currentUser.username === selectedPost.author ||
-                    currentUser.role === 'project_admin' ||
-                    currentUser.isSuperAdmin);
+    const canEdit = currentUser && (
+      // 작성자 본인인 경우 (authorId 또는 username으로 확인)
+      (selectedPost.authorId && String(currentUser.id) === String(selectedPost.authorId)) ||
+      (currentUser.username === selectedPost.author) ||
+      // 관리자인 경우
+      currentUser.role === 'project_admin' ||
+      currentUser.isSuperAdmin ||
+      // 슈퍼 관리자인 경우
+      currentUser.isSuperAdmin === true
+    );
+
+    // 디버깅을 위한 로그
+    console.log('권한 확인:', {
+      currentUser,
+      selectedPost,
+      canEdit,
+      authorIdMatch: selectedPost.authorId && String(currentUser?.id) === String(selectedPost.authorId),
+      usernameMatch: currentUser?.username === selectedPost.author,
+      isAdmin: currentUser?.role === 'project_admin',
+      isSuperAdmin: currentUser?.isSuperAdmin
+    });
 
     return (
       <div className="space-y-6">
@@ -956,22 +1117,31 @@ const ProjectTemplate = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSelectedPost(null)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="bg-white border border-gray-300 text-gray-700 px-3 pr-5 py-2 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center space-x-1"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            <span>목록으로 돌아가기</span>
+            <span>목록</span>
           </button>
           
-          {/* 수정하기 버튼 */}
+          {/* 수정/삭제 버튼 */}
           {canEdit && (
-            <button
-              onClick={() => setPostEditor({ isOpen: true, boardType: selectedPost.boardType, post: selectedPost })}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              수정하기
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setPostEditor({ isOpen: true, boardType: selectedPost.boardType, post: selectedPost })}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <span>수정하기</span>
+              </button>
+              <button
+                onClick={() => handleDeletePost(selectedPost)}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center space-x-2"
+              >
+                <FontAwesomeIcon icon={faTrash} className="h-4 w-4" />
+                <span>삭제하기</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -999,6 +1169,29 @@ const ProjectTemplate = () => {
 
           {/* 내용 */}
           <div className="prose max-w-none">
+            {selectedPost.boardType === 'gallery' && selectedPost.files && selectedPost.files.length > 0 && selectedPost.files[0].type?.startsWith('image/') ? (
+              // 갤러리 게시판: 이미지를 가운데에 크게 표시
+              <div className="mb-6">
+                <div className="flex justify-center">
+                  <div className="max-w-2xl w-full">
+                    <img
+                      src={selectedPost.files[0].url || '/placeholder-image.jpg'}
+                      alt={selectedPost.title}
+                      className="w-full h-auto rounded-lg shadow-lg"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'block';
+                      }}
+                    />
+                    <div className="hidden text-center py-8 bg-gray-100 rounded-lg">
+                      <FontAwesomeIcon icon={faImage} className="h-16 w-16 text-gray-400 mb-4" />
+                      <p className="text-gray-500">이미지를 불러올 수 없습니다</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            
             <div className="text-gray-700 whitespace-pre-wrap text-lg leading-relaxed">
               {selectedPost.content}
             </div>
@@ -1011,12 +1204,19 @@ const ProjectTemplate = () => {
               <div className="space-y-2">
                 {selectedPost.files.map((file, index) => (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                    {file.type?.startsWith('image/') ? (
+                      <FontAwesomeIcon icon={faImage} className="h-5 w-5 text-pink-400" />
+                    ) : (
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
                     <span className="text-gray-700">{file.name}</span>
-                    <span className="text-sm text-gray-500">({file.size})</span>
-                    <button className="ml-auto text-blue-600 hover:text-blue-800 text-sm">
+                    <span className="text-sm text-gray-500">({formatFileSize(file.size)})</span>
+                    <button 
+                      onClick={() => handleFileDownload(file)}
+                      className="ml-auto bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
                       다운로드
                     </button>
                   </div>

@@ -173,19 +173,10 @@ const LoginPage = () => {
         </div>
 
         {/* 테스트 계정 정보 */}
-        <div className="mt-6 p-4 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/50 relative z-10">
+        <div className="mt-6 p-4 bg-blue-500/30 backdrop-blur-sm rounded-lg border border-blue-200/40 relative z-10">
           <div className="text-center">
-            <p className="text-sm text-blue-800 font-medium mb-2">테스트 계정</p>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-blue-600">아이디:</span>
-                <div className="font-mono font-bold text-blue-800 bg-white px-2 py-1 rounded border mt-1">admin</div>
-              </div>
-              <div>
-                <span className="text-blue-600">비밀번호:</span>
-                <div className="font-mono font-bold text-blue-800 bg-white px-2 py-1 rounded border mt-1">admin123</div>
-              </div>
-            </div>
+            <p className="text-sm text-gray-300/80 font-medium ">슈퍼관리자로 로그인합니다.</p>
+            
           </div>
         </div>
       </div>

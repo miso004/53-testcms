@@ -1017,6 +1017,7 @@ const ProjectAdminDashboard = () => {
                   <option value="notice">공지사항</option>
                   <option value="free">자유게시판</option>
                   <option value="qna">질문게시판</option>
+                  <option value="gallery">갤러리게시판</option>
                 </select>
               </div>
               
@@ -1063,7 +1064,8 @@ const ProjectAdminDashboard = () => {
     const boardNames = {
       notice: '공지사항',
       free: '자유게시판',
-      qna: '질문게시판'
+      qna: '질문게시판',
+      gallery: '갤러리게시판'
     };
 
     return (

@@ -33,7 +33,8 @@ const PostEditor = ({
   const boardNames = {
     notice: '공지사항',
     free: '자유게시판',
-    qna: '질문게시판'
+    qna: '질문게시판',
+    gallery: '갤러리게시판'
   };
 
   // 카테고리 옵션
@@ -52,6 +53,12 @@ const PostEditor = ({
       { value: 'general', label: '일반' },
       { value: 'technical', label: '기술' },
       { value: 'usage', label: '사용법' }
+    ],
+    gallery: [
+      { value: 'general', label: '일반' },
+      { value: 'photo', label: '사진' },
+      { value: 'art', label: '예술' },
+      { value: 'design', label: '디자인' }
     ]
   };
 
@@ -104,7 +111,22 @@ const PostEditor = ({
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setFiles(prev => [...prev, ...selectedFiles]);
+    
+    // 갤러리 게시판인 경우 이미지 파일만 허용
+    if (boardType === 'gallery') {
+      const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
+      const nonImageFiles = selectedFiles.filter(file => !file.type.startsWith('image/'));
+      
+      if (nonImageFiles.length > 0) {
+        alert('갤러리 게시판에는 이미지 파일만 업로드할 수 있습니다.');
+      }
+      
+      if (imageFiles.length > 0) {
+        setFiles(prev => [...prev, ...imageFiles]);
+      }
+    } else {
+      setFiles(prev => [...prev, ...selectedFiles]);
+    }
   };
 
   const removeFile = (index) => {
@@ -153,7 +175,8 @@ const PostEditor = ({
           name: file.name,
           size: file.size,
           type: file.type,
-          lastModified: file.lastModified
+          lastModified: file.lastModified,
+          url: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
         }))
       };
 
@@ -212,6 +235,7 @@ const PostEditor = ({
               </div>
               <h2 className="text-2xl font-bold text-gray-800">
                 {isViewMode ? '게시글 보기' : post ? '게시글 수정' : '새 게시글 작성'} - {boardNames[boardType]}
+                {boardType === 'gallery' && <span className="text-pink-600 ml-2">📸</span>}
               </h2>
             </div>
             <button
@@ -301,22 +325,37 @@ const PostEditor = ({
             {!isViewMode && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  첨부파일
+                  {boardType === 'gallery' ? '이미지 업로드' : '첨부파일'}
+                  {boardType === 'gallery' && <span className="text-blue-600 ml-2">(갤러리 게시판은 이미지 중심으로 작성해주세요)</span>}
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                  boardType === 'gallery' 
+                    ? 'border-pink-300 hover:border-pink-400 bg-pink-50' 
+                    : 'border-gray-300 hover:border-blue-400'
+                }`}>
                   <input
                     type="file"
                     multiple
                     onChange={handleFileChange}
                     className="hidden"
                     id="file-upload"
-                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
+                    accept={boardType === 'gallery' ? ".jpg,.jpeg,.png,.gif,.webp" : ".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"}
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <div className="flex flex-col items-center space-y-2">
-                      <FontAwesomeIcon icon={faFile} className="h-8 w-8 text-gray-400" />
-                      <span className="text-gray-600">파일을 선택하거나 여기로 드래그하세요</span>
-                      <span className="text-sm text-gray-500">PDF, DOC, 이미지 파일 등 (최대 10MB)</span>
+                      <FontAwesomeIcon 
+                        icon={boardType === 'gallery' ? faImage : faFile} 
+                        className={`h-8 w-8 ${boardType === 'gallery' ? 'text-pink-400' : 'text-gray-400'}`} 
+                      />
+                      <span className={`${boardType === 'gallery' ? 'text-pink-700' : 'text-gray-600'}`}>
+                        {boardType === 'gallery' ? '이미지를 선택하거나 여기로 드래그하세요' : '파일을 선택하거나 여기로 드래그하세요'}
+                      </span>
+                      <span className={`text-sm ${boardType === 'gallery' ? 'text-pink-600' : 'text-gray-500'}`}>
+                        {boardType === 'gallery' 
+                          ? 'JPG, PNG, GIF, WebP 이미지 파일 (갤러리 전용)' 
+                          : 'PDF, DOC, 이미지 파일 등 (최대 10MB)'
+                        }
+                      </span>
                     </div>
                   </label>
                 </div>
@@ -324,23 +363,63 @@ const PostEditor = ({
                 {/* 업로드된 파일 목록 */}
                 {files.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <h4 className="text-sm font-medium text-gray-700">첨부된 파일:</h4>
-                    {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <FontAwesomeIcon icon={faFile} className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm text-gray-700">{file.name}</span>
-                          <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          삭제
-                        </button>
+                    <h4 className="text-sm font-medium text-gray-700">
+                      {boardType === 'gallery' ? '업로드된 이미지:' : '첨부된 파일:'}
+                    </h4>
+                    {boardType === 'gallery' ? (
+                      // 갤러리 게시판용 이미지 그리드 레이아웃
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {files.map((file, index) => (
+                          <div key={index} className="relative group">
+                            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200">
+                              {file.type.startsWith('image/') ? (
+                                <img
+                                  src={URL.createObjectURL(file)}
+                                  alt={file.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <FontAwesomeIcon icon={faFile} className="h-8 w-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                title="삭제"
+                              >
+                                <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <div className="mt-2 text-center">
+                              <p className="text-xs text-gray-600 truncate">{file.name}</p>
+                              <p className="text-xs text-gray-500">({formatFileSize(file.size)})</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      // 일반 게시판용 리스트 레이아웃
+                      files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <FontAwesomeIcon icon={faFile} className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-700">{file.name}</span>
+                            <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
