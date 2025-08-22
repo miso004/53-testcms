@@ -882,7 +882,7 @@ const ProjectTemplate = () => {
                             </span>
                           </div>
                           <div className="text-xs text-gray-400">
-                            {post.date}
+                            {post.date} {post.time || ''}
                           </div>
                         </div>
                       </div>
@@ -1173,7 +1173,7 @@ const ProjectTemplate = () => {
               // 갤러리 게시판: 이미지를 가운데에 크게 표시
               <div className="mb-6">
                 <div className="flex justify-center">
-                  <div className="max-w-2xl w-full">
+                  <div className="max-w-4xl w-full">
                     <img
                       src={selectedPost.files[0].url || '/placeholder-image.jpg'}
                       alt={selectedPost.title}

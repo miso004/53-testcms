@@ -4,110 +4,123 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a React-based Content Management System (CMS) with a multi-tier permission system. The project consists of a frontend-only application using React, Vite, and Tailwind CSS. Data persistence is handled through localStorage.
+A React-based multi-tenant Content Management System with hierarchical permissions. Frontend-only application using React 19, Vite, and Tailwind CSS. All data persists in localStorage (no backend).
 
 ## Commands
 
-### Development
 ```bash
-cd frontend
-npm run dev    # Start Vite dev server with hot reload
-```
+# Development
+cd frontend && npm run dev      # Start Vite dev server (http://localhost:5173)
 
-### Build
-```bash
-cd frontend
-npm run build  # Build for production with Vite
-```
+# Build & Deploy
+cd frontend && npm run build    # Production build
+cd frontend && npm run preview  # Preview production build
 
-### Linting
-```bash
-cd frontend
-npm run lint   # Run ESLint on the codebase
-```
-
-### Preview Production Build
-```bash
-cd frontend
-npm run preview  # Preview the production build locally
+# Code Quality
+cd frontend && npm run lint     # Run ESLint
 ```
 
 ## Architecture
 
-### Tech Stack
-- **Frontend Framework**: React 19 with React Router DOM
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS with Flowbite components
-- **Icons**: FontAwesome and Flaticon
-- **Data Storage**: localStorage (no backend currently)
-- **Deployment**: Frontend-only static site
+### Permission Hierarchy
+1. **Super Admin** - System-wide control, project creation/deletion
+2. **Project Admin** - Project-specific management, user/content control  
+3. **Regular User** - Content posting, board interaction
 
-### Permission System
-The application implements a three-tier permission hierarchy:
-1. **Super Admin**: Full system access, can create projects and manage all content
-2. **Project Admin**: Manages specific projects, users, and content within their assigned projects
-3. **Regular Users**: Can access projects, post content, and interact with boards
+Permission checks via `frontend/src/utils/permissions.js`:
+- `isSuperAdmin()` - Check super admin status
+- `isProjectAdmin(projectId)` - Check project admin status
+- `hasProjectManagementPermission(projectId)` - Check management access
 
-Authentication is managed through `localStorage` with permission utilities in `frontend/src/utils/permissions.js`.
+### Routing Structure
 
-### Core Routes
-- `/login` - Public login page
-- `/dashboard` - Super admin dashboard
-- `/create-project` - Super admin project creation
+Protected routes enforced in `App.jsx`:
+- `/login` - Unified login (all user types)
+- `/dashboard` - Super admin only
+- `/create-project` - Super admin only
 - `/project/:projectId` - Public project homepage
 - `/project/:projectId/admin` - Project admin dashboard
 
-### Key Components Structure
+### Data Storage Pattern
 
-#### Pages
-- `LoginPage` - Unified login for all user types with mountain background
-- `DashboardPage` - Super admin main dashboard
-- `CreateProjectPage` - Project creation interface
-- `ProjectHomePage` - Dynamic project frontend with customizable categories
-- `ProjectAdminDashboard` - Project-specific admin panel
+localStorage keys:
+- `superAdmin` - Super admin session
+- `project_${projectId}_user` - Project user session
+- `project_${projectId}_categories` - Dynamic menu items
+- `project_${projectId}_posts` - Board posts
+- `project_${projectId}_pageContent_${categoryId}` - Page HTML content
 
-#### Admin Components (`frontend/src/components/admin/`)
-- `DashboardTab` - Overview statistics
-- `UserManagementTab` - User CRUD operations
-- `CategoryManagementTab` - Dynamic menu/category management
-- `BoardManagementTab` - Board content management
-- `SettingsTab` - Project settings
+### Real-time Updates
+
+Cross-tab/window synchronization:
+1. **Storage events** - Cross-tab communication
+2. **PostMessage API** - Same-tab updates between admin panel and homepage
+
+Implementation in `CategoryManagementTab.jsx:notifyProjectHomepage()`:
+```javascript
+// Notify same-tab windows
+window.postMessage({ type: 'categoriesUpdated', projectId }, '*');
+// Storage event triggers automatically for other tabs
+```
+
+### Component Architecture
+
+#### Core Pages
+- `LoginPage` - Mountain background, unified auth
+- `DashboardPage` - Super admin project management
+- `CreateProjectPage` - New project setup
+- `ProjectHomePage` - Dynamic public-facing site
+- `ProjectAdminDashboard` - Project management interface
+
+#### Admin Tabs (`frontend/src/components/admin/`)
+- `DashboardTab` - Statistics overview
+- `UserManagementTab` - User CRUD
+- `CategoryManagementTab` - Menu/page management
+- `BoardManagementTab` - Post moderation
+- `SettingsTab` - Project configuration
 
 #### Shared Components
 - `UserAuth` - Login/signup modal
-- `PageEditor` - HTML content editor for pages
-- `PostEditor` - Board post creation/editing
-- `ProfileManager` - User profile management
+- `PageEditor` - HTML content editor
+- `PostEditor` - Board post creation
+- `ProfileManager` - User profile editing
 
-### Data Flow
-1. **Category Management**: Admin creates/edits categories → Saved to localStorage → Real-time sync via storage events and postMessage → Homepage updates dynamically
-2. **User Authentication**: Login → Role detection → localStorage session → Permission-based UI rendering
-3. **Content Editing**: Admin edits page → HTML saved to localStorage → Immediate UI update
+### Content Types
 
-### Styling Conventions
-- Glassmorphism design with `bg-white/90 backdrop-blur-sm`
-- Consistent mountain background image across login, dashboard, and project creation pages
-- Tailwind utility classes for all styling
-- Responsive design with mobile-first approach
+1. **Page** - Static HTML content, admin-editable
+2. **Board** - User-generated posts with comments
+3. **Gallery** - Image-focused board variant
 
-## Development Notes
+Default categories on project creation:
+- 소개 (Introduction) - Page type
+- 일반 (General) - Page type  
+- 게시판 (Board) - Board type
+- 갤러리 (Gallery) - Board type
 
-### localStorage Keys Pattern
-- User data: `users` (global user list)
-- Session: `currentUser` (active session)
-- Project data: `project_${projectId}_${dataType}` (e.g., `project_1_categories`)
+### Styling System
 
-### Real-time Sync Implementation
-The application uses a dual approach for cross-tab communication:
-1. Storage events for cross-tab sync
-2. PostMessage for same-tab updates
+Consistent glassmorphism design:
+- Background: Mountain image with dark overlay
+- Components: `bg-white/90 backdrop-blur-sm`
+- Active states: Blue accent (`border-blue-500 text-blue-600`)
+- Transitions: `transition-colors` for smooth interactions
 
-See `notifyProjectHomepage` function in `CategoryManagementTab.jsx` for implementation details.
+## Development Workflow
 
-### Component Communication
-- Parent-child: Props and callbacks
-- Cross-component: localStorage events
-- Same-tab: PostMessage API
+### Adding New Features
+1. Check permission requirements in route protection
+2. Use existing localStorage patterns for data persistence
+3. Implement real-time sync with storage events/postMessage
+4. Follow existing component structure and styling
 
-### File Upload Handling
-File uploads are managed through the `FileUpload` component with localStorage-based storage simulation. In production, this would need backend integration.
+### Testing User Flows
+Development accounts (stored in localStorage):
+- Super Admin: `admin` / `admin123`
+- Project Admin: Created via admin panel
+- Regular User: Self-registration via signup
+
+### Important Considerations
+- All file uploads stored as base64 in localStorage (production needs backend)
+- Korean text in UI (consider i18n for production)
+- No data validation on client (add backend validation for production)
+- Cross-tab sync relies on storage events (may not work in private browsing)

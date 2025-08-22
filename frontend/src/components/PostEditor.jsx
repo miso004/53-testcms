@@ -73,22 +73,33 @@ const PostEditor = ({
       });
       
       // 기존 파일 정보 로드
-      if (post.files) {
+      if (post.files && Array.isArray(post.files)) {
+        // 파일 정보가 있으면 그대로 사용 (수정 모드)
         setFiles(post.files);
       } else {
         setFiles([]);
       }
       
-      // 글 보기 시에는 항상 보기 모드로 설정 (편집 불가)
-      // 로그인한 사용자이고 본인이 작성한 글인 경우에만 편집 모드로 변경 가능
+      // 편집 권한 확인: 작성자 본인, 프로젝트 관리자, 슈퍼 관리자
       let canEdit = false;
       
-      if (currentUser && post.authorId) {
-        // ID 비교 (문자열로 변환하여 비교)
-        canEdit = String(currentUser.id) === String(post.authorId) || currentUser.username === post.author;
+      if (currentUser) {
+        // 작성자 본인 확인
+        if (post.authorId) {
+          canEdit = String(currentUser.id) === String(post.authorId);
+        }
+        // username으로도 확인 (fallback)
+        if (!canEdit && currentUser.username === post.author) {
+          canEdit = true;
+        }
+        // 프로젝트 관리자 또는 슈퍼 관리자 확인
+        if (!canEdit && (currentUser.role === 'project_admin' || currentUser.isSuperAdmin)) {
+          canEdit = true;
+        }
       }
       
-      setIsViewMode(!canEdit);
+      // 편집 모드일 때만 보기 모드로 설정하지 않음
+      setIsViewMode(false);
     } else {
       // 새 글 작성 모드: 폼 초기화
       setFormData({
@@ -171,13 +182,20 @@ const PostEditor = ({
         projectId: projectId,
         createdAt: post ? post.createdAt : new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        files: files.map(file => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: file.lastModified,
-          url: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-        }))
+        files: files.map(file => {
+          // 이미 저장된 파일인 경우 (url이 있는 경우)
+          if (file.url) {
+            return file;
+          }
+          // 새로 업로드된 파일인 경우
+          return {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified,
+            url: file.type?.startsWith('image/') && file instanceof File ? URL.createObjectURL(file) : null
+          };
+        })
       };
 
       // localStorage에 저장
@@ -321,14 +339,16 @@ const PostEditor = ({
               </label>
             </div>
 
-            {/* 파일 업로드 */}
-            {!isViewMode && (
+            {/* 파일 업로드 및 표시 */}
+            {(files.length > 0 || !isViewMode) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {boardType === 'gallery' ? '이미지 업로드' : '첨부파일'}
-                  {boardType === 'gallery' && <span className="text-blue-600 ml-2">(갤러리 게시판은 이미지 중심으로 작성해주세요)</span>}
-                </label>
-                <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
+                {!isViewMode && (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {boardType === 'gallery' ? '이미지 업로드' : '첨부파일'}
+                      {boardType === 'gallery' && <span className="text-blue-600 ml-2">(갤러리 게시판은 이미지 중심으로 작성해주세요)</span>}
+                    </label>
+                    <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${
                   boardType === 'gallery' 
                     ? 'border-pink-300 hover:border-pink-400 bg-pink-50' 
                     : 'border-gray-300 hover:border-blue-400'
@@ -359,6 +379,8 @@ const PostEditor = ({
                     </div>
                   </label>
                 </div>
+                  </>
+                )}
                 
                 {/* 업로드된 파일 목록 */}
                 {files.length > 0 && (
@@ -372,31 +394,40 @@ const PostEditor = ({
                         {files.map((file, index) => (
                           <div key={index} className="relative group">
                             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200">
-                              {file.type.startsWith('image/') ? (
+                              {file.type?.startsWith('image/') ? (
                                 <img
-                                  src={URL.createObjectURL(file)}
+                                  src={file.url || (file instanceof File ? URL.createObjectURL(file) : '')}
                                   alt={file.name}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentElement.querySelector('.image-error')?.classList.remove('hidden');
+                                  }}
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <FontAwesomeIcon icon={faFile} className="h-8 w-8 text-gray-400" />
                                 </div>
                               )}
+                              <div className="hidden image-error w-full h-full flex items-center justify-center">
+                                <FontAwesomeIcon icon={faImage} className="h-8 w-8 text-gray-400" />
+                              </div>
                             </div>
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                onClick={() => removeFile(index)}
-                                className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                                title="삭제"
-                              >
-                                <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
-                              </button>
-                            </div>
+                            {!isViewMode && (
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  type="button"
+                                  onClick={() => removeFile(index)}
+                                  className="w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                  title="삭제"
+                                >
+                                  <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
                             <div className="mt-2 text-center">
                               <p className="text-xs text-gray-600 truncate">{file.name}</p>
-                              <p className="text-xs text-gray-500">({formatFileSize(file.size)})</p>
+                              <p className="text-xs text-gray-500">({formatFileSize(file.size || 0)})</p>
                             </div>
                           </div>
                         ))}
@@ -406,17 +437,23 @@ const PostEditor = ({
                       files.map((file, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-3">
-                            <FontAwesomeIcon icon={faFile} className="h-4 w-4 text-gray-400" />
+                            {file.type?.startsWith('image/') ? (
+                              <FontAwesomeIcon icon={faImage} className="h-4 w-4 text-pink-400" />
+                            ) : (
+                              <FontAwesomeIcon icon={faFile} className="h-4 w-4 text-gray-400" />
+                            )}
                             <span className="text-sm text-gray-700">{file.name}</span>
-                            <span className="text-xs text-gray-500">({formatFileSize(file.size)})</span>
+                            <span className="text-xs text-gray-500">({formatFileSize(file.size || 0)})</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                          >
-                            삭제
-                          </button>
+                          {!isViewMode && (
+                            <button
+                              type="button"
+                              onClick={() => removeFile(index)}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              삭제
+                            </button>
+                          )}
                         </div>
                       ))
                     )}
@@ -439,26 +476,6 @@ const PostEditor = ({
               </div>
             )}
 
-            {/* 보기 모드에서 편집 모드로 전환 */}
-            {isViewMode && currentUser && post && (
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => {
-                    // 편집 모드로 전환
-                    if (String(currentUser.id) === String(post.authorId) || currentUser.username === post.author) {
-                      setIsViewMode(false);
-                    } else {
-                      alert('본인이 작성한 글만 수정할 수 있습니다.');
-                    }
-                  }}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors"
-                >
-                  <FontAwesomeIcon icon={faSave} className="h-4 w-4" />
-                  <span>편집하기</span>
-                </button>
-              </div>
-            )}
 
             {/* 미리보기 */}
             {showPreview && !isViewMode && (
